@@ -330,9 +330,52 @@ select{border:1.5px solid var(--border);border-radius:4px;padding:7px 8px;font-f
         <h3>Review these 📌</h3>
         <div id="res-missed-list"></div>
       </div>
+      <!-- Bonus round teaser -->
+      <div style="width:100%;background:var(--soft);border:1.5px solid var(--gold);border-radius:8px;padding:14px;margin-bottom:12px;text-align:left;">
+        <div style="font-size:10px;font-weight:bold;color:var(--gold);margin-bottom:4px;">🎁 BONUS ROUND</div>
+        <div style="font-size:10px;color:var(--ink);margin-bottom:10px;">See English → guess the pinyin → guess the character. 3-step challenge!</div>
+        <button onclick="startBonusRound()" style="width:100%;padding:10px;background:var(--gold);color:white;border:none;border-radius:6px;font-family:'Space Mono';font-size:10px;cursor:pointer;letter-spacing:1px;">START BONUS ROUND 🎯</button>
+      </div>
       <div class="result-btns">
         <button class="result-btn" onclick="showQuizSetup()">New Quiz</button>
         <button class="result-btn primary" onclick="retryMissed()">Retry Missed</button>
+      </div>
+    </div>
+
+    <!-- ── BONUS ROUND ── -->
+    <div id="bonus-running" style="display:none;flex-direction:column;align-items:center;width:100%;max-width:500px;">
+      <!-- Step badges -->
+      <div style="display:flex;gap:4px;align-items:center;margin-bottom:10px;width:100%;">
+        <div id="bon-badge-1" style="padding:3px 8px;border-radius:20px;font-size:8px;background:var(--ink);color:var(--paper);transition:all .3s;white-space:nowrap;">STEP 1 · PINYIN</div>
+        <div style="flex:1;height:1px;background:var(--border);"></div>
+        <div id="bon-badge-2" style="padding:3px 8px;border-radius:20px;font-size:8px;background:var(--border);color:var(--muted);transition:all .3s;white-space:nowrap;">STEP 2 · CHARACTER</div>
+        <div style="flex:1;height:1px;background:var(--border);"></div>
+        <div id="bon-badge-3" style="padding:3px 8px;border-radius:20px;font-size:8px;background:var(--border);color:var(--muted);transition:all .3s;white-space:nowrap;">STEP 3 · CONFIRM</div>
+      </div>
+      <div class="quiz-q-num" id="bon-num">Bonus 1 / 10</div>
+      <div class="quiz-prog-bar"><div class="quiz-prog-fill" id="bon-prog" style="background:var(--gold);"></div></div>
+      <!-- English prompt (big) -->
+      <div id="bon-prompt" style="font-family:'Cormorant Garamond',serif;font-size:clamp(20px,6vw,30px);font-weight:700;color:var(--ink);text-align:center;margin:14px 0 4px;line-height:1.3;"></div>
+      <div id="bon-sub" style="font-size:10px;color:var(--muted);text-align:center;margin-bottom:16px;"></div>
+      <!-- Hint bar (shows confirmed step info) -->
+      <div id="bon-hint" style="display:none;background:var(--soft);border:1px solid var(--border);border-radius:6px;padding:8px 14px;font-size:11px;color:var(--ink);text-align:center;margin-bottom:12px;width:100%;"></div>
+      <div id="bon-choices" class="quiz-choices" style="width:100%;"></div>
+      <div id="bon-feedback" style="min-height:20px;text-align:center;font-size:11px;margin-top:10px;font-weight:bold;color:var(--muted);"></div>
+      <button id="bon-next" onclick="bonusNext()" style="display:none;width:100%;margin-top:10px;padding:11px;background:var(--gold);color:white;border:none;border-radius:6px;font-family:'Space Mono';font-size:11px;cursor:pointer;">Next →</button>
+    </div>
+
+    <!-- Bonus Result -->
+    <div id="bonus-result" style="display:none;flex-direction:column;align-items:center;width:100%;max-width:500px;text-align:center;">
+      <div id="bon-res-score" style="font-family:'Cormorant Garamond',serif;font-size:68px;color:var(--gold);font-weight:700;line-height:1;"></div>
+      <div id="bon-res-label" style="font-size:11px;color:var(--muted);margin-bottom:8px;"></div>
+      <div id="bon-res-grade" style="font-family:'Noto Serif SC',serif;font-size:24px;color:var(--red);margin-bottom:16px;"></div>
+      <div id="bon-res-missed" style="display:none;width:100%;" class="result-missed">
+        <h3>Review these 📌</h3>
+        <div id="bon-res-missed-list"></div>
+      </div>
+      <div style="display:flex;gap:8px;width:100%;">
+        <button onclick="showQuizSetup()" style="flex:1;padding:11px;border:2px solid var(--ink);border-radius:6px;font-family:'Space Mono';font-size:10px;background:transparent;cursor:pointer;">New Quiz</button>
+        <button onclick="startBonusRound()" style="flex:1;padding:11px;background:var(--gold);color:white;border:none;border-radius:6px;font-family:'Space Mono';font-size:10px;cursor:pointer;">Retry Bonus</button>
       </div>
     </div>
 
@@ -398,14 +441,12 @@ select{border:1.5px solid var(--border);border-radius:4px;padding:7px 8px;font-f
         <div class="ex-badge">General</div>
       </div>
 
-      <div class="ex-card" onclick="startExercise('sort')">
-        <div class="ex-icon">🔤</div>
-        <div class="ex-title">Sort by Tone</div>
-        <div class="ex-desc">Group words by their first tone (1st/2nd/3rd/4th)</div>
-        <div class="ex-badge">General</div>
+      <div class="ex-card" onclick="startSentenceExercise()" style="grid-column:1/-1;border-color:var(--red);background:linear-gradient(135deg,var(--paper),#fcecea);">
+        <div class="ex-icon">📖</div>
+        <div class="ex-title" style="color:var(--red);">Complete the Sentence 句子完成</div>
+        <div class="ex-desc">Read a Chinese sentence with a missing word → choose the correct character. No pinyin! Gets harder each day.</div>
+        <div class="ex-badge" style="background:#fcecea;color:var(--red);border-color:var(--red);">Cumulative · No Pinyin</div>
       </div>
-
-    </div>
   </div>
 
   <!-- Exercise Running Area -->
@@ -473,9 +514,60 @@ select{border:1.5px solid var(--border);border-radius:4px;padding:7px 8px;font-f
     </div>
   </div>
 
-</div>
+  <!-- ── SENTENCE EXERCISE ── -->
+  <div id="sent-area" style="display:none;padding:16px;max-width:580px;margin:0 auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <button onclick="document.getElementById('sent-area').style.display='none';document.getElementById('ex-home').style.display='block';"
+        style="border:1.5px solid var(--border);border-radius:4px;padding:5px 10px;font-family:'Space Mono';font-size:10px;background:transparent;cursor:pointer;">← Back</button>
+      <div style="font-size:10px;font-weight:bold;color:var(--red);">📖 Complete the Sentence</div>
+      <div id="sent-score-bar" style="font-size:10px;color:var(--muted);">0 / 0</div>
+    </div>
 
-<!-- ─── PLAN ─── -->
+    <!-- Day selector -->
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
+      <span style="font-size:10px;color:var(--muted);">Up to day:</span>
+      <select id="sent-day-sel" style="font-size:10px;flex:1;" onchange="loadSentenceDay()">
+        <option value="1">Day 1 (easiest)</option>
+      </select>
+      <span style="font-size:9px;color:var(--muted);" id="sent-pool-info"></span>
+    </div>
+
+    <div class="quiz-prog-bar"><div class="quiz-prog-fill" id="sent-prog" style="background:var(--red);"></div></div>
+    <div id="sent-q-num" style="font-size:9px;color:var(--muted);margin:4px 0 16px;"></div>
+
+    <!-- Sentence display -->
+    <div style="background:white;border:2px solid var(--ink);border-radius:8px;padding:18px 16px;margin-bottom:14px;min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+      <div id="sent-sentence" style="font-family:'Noto Serif SC',serif;font-size:clamp(18px,5vw,26px);color:var(--ink);text-align:center;line-height:1.8;letter-spacing:2px;"></div>
+      <div id="sent-translation" style="font-size:10px;color:var(--muted);margin-top:8px;text-align:center;font-style:italic;"></div>
+    </div>
+
+    <div id="sent-sub" style="font-size:10px;color:var(--muted);text-align:center;margin-bottom:12px;">Choose the correct character to fill in ＿</div>
+
+    <!-- 4 character choices -->
+    <div id="sent-choices" class="quiz-choices" style="grid-template-columns:1fr 1fr;"></div>
+
+    <div id="sent-feedback" style="min-height:22px;text-align:center;font-size:11px;margin-top:10px;font-weight:bold;"></div>
+    <button id="sent-next" onclick="sentNext()" style="display:none;width:100%;margin-top:10px;padding:11px;background:var(--red);color:white;border:none;border-radius:6px;font-family:'Space Mono';font-size:11px;cursor:pointer;">Next →</button>
+  </div>
+
+  <!-- Sentence Result -->
+  <div id="sent-result" style="display:none;padding:24px 16px;max-width:500px;margin:0 auto;text-align:center;">
+    <div id="sent-res-score" style="font-family:'Cormorant Garamond',serif;font-size:68px;color:var(--red);font-weight:700;line-height:1;"></div>
+    <div id="sent-res-label" style="font-size:11px;color:var(--muted);margin-bottom:8px;"></div>
+    <div id="sent-res-grade" style="font-family:'Noto Serif SC',serif;font-size:24px;color:var(--gold);margin-bottom:16px;"></div>
+    <div id="sent-res-missed" style="display:none;width:100%;text-align:left;" class="result-missed">
+      <h3>Review these 📌</h3>
+      <div id="sent-res-missed-list"></div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="document.getElementById('sent-result').style.display='none';document.getElementById('ex-home').style.display='block';"
+        style="flex:1;padding:11px;border:2px solid var(--ink);border-radius:6px;font-family:'Space Mono';font-size:10px;background:transparent;cursor:pointer;">Back</button>
+      <button onclick="startSentenceExercise()"
+        style="flex:1;padding:11px;background:var(--red);color:white;border:none;border-radius:6px;font-family:'Space Mono';font-size:10px;cursor:pointer;">Play Again</button>
+    </div>
+  </div>
+
+</div>
 <div id="tab-plan" style="display:none">
   <div class="plan-view active">
     <div class="plan-header">
@@ -1470,6 +1562,8 @@ function showResult(){
 function showQuizSetup(){
   document.getElementById('quiz-running').classList.remove('active');
   document.getElementById('quiz-result').classList.remove('active');
+  document.getElementById('bonus-running').style.display='none';
+  document.getElementById('bonus-result').style.display='none';
   document.getElementById('quiz-setup').style.display='block';
   activeDayForQuiz=null;
 }
@@ -1480,7 +1574,608 @@ function retryMissed(){
 }
 
 // ══════════════════════════════════════════
-// EXERCISES
+// BONUS ROUND — English → Pinyin → Character → Full confirm
+// ══════════════════════════════════════════
+let bonWords=[], bonIdx=0, bonScore=0, bonMissed=[];
+let bonStep=1, bonPassedPinyin=false, bonLocked=false;
+
+function startBonusRound(){
+  if(!qWords||!qWords.length){alert('Run a quiz first!');return;}
+  bonWords=[...qWords].sort(()=>Math.random()-.5);
+  bonIdx=0; bonScore=0; bonMissed=[]; bonStep=1; bonPassedPinyin=false; bonLocked=false;
+  document.getElementById('quiz-result').classList.remove('active');
+  document.getElementById('bonus-result').style.display='none';
+  const br=document.getElementById('bonus-running');
+  br.style.display='flex';
+  renderBonusStep1();
+}
+
+function setBonBadges(active){
+  const ids=['bon-badge-1','bon-badge-2','bon-badge-3'];
+  const labels=['STEP 1 · PINYIN','STEP 2 · CHARACTER','STEP 3 · CONFIRM'];
+  ids.forEach((id,i)=>{
+    const el=document.getElementById(id);
+    if(i+1<active){el.style.background='var(--green)';el.style.color='white';el.textContent='✓ '+labels[i];}
+    else if(i+1===active){el.style.background='var(--ink)';el.style.color='var(--paper)';el.textContent=labels[i];}
+    else{el.style.background='var(--border)';el.style.color='var(--muted)';el.textContent=labels[i];}
+  });
+}
+
+function renderBonusStep1(){
+  if(bonIdx>=bonWords.length){showBonusResult();return;}
+  const w=bonWords[bonIdx];
+  bonStep=1; bonLocked=false; bonPassedPinyin=false;
+  setBonBadges(1);
+  document.getElementById('bon-num').textContent=`Bonus ${bonIdx+1} / ${bonWords.length}`;
+  document.getElementById('bon-prog').style.width=((bonIdx/bonWords.length)*100)+'%';
+  document.getElementById('bon-prompt').textContent=w.en;
+  document.getElementById('bon-prompt').style.fontSize='clamp(18px,5vw,26px)';
+  document.getElementById('bon-prompt').style.fontFamily="'Cormorant Garamond',serif";
+  document.getElementById('bon-sub').textContent='Step 1 — which pinyin matches this English meaning?';
+  document.getElementById('bon-hint').style.display='none';
+  document.getElementById('bon-feedback').textContent='';
+  document.getElementById('bon-next').style.display='none';
+
+  const wrongPy=getPinyinChoices(w, ALL_WORDS);
+  const choices=[w.py,...wrongPy].sort(()=>Math.random()-.5);
+  const box=document.getElementById('bon-choices');
+  box.innerHTML=''; box.style.gridTemplateColumns='1fr 1fr';
+  choices.forEach(py=>{
+    const btn=document.createElement('button');
+    btn.className='quiz-choice';
+    btn.style.fontSize='13px'; btn.style.letterSpacing='1px';
+    btn.textContent=py;
+    btn.onclick=()=>handleBonusStep1(btn,py,w);
+    box.appendChild(btn);
+  });
+}
+
+function handleBonusStep1(btn,chosenPy,word){
+  if(bonLocked)return; bonLocked=true;
+  const correct=chosenPy===word.py;
+  btn.classList.add(correct?'correct':'wrong');
+  document.querySelectorAll('#bon-choices .quiz-choice').forEach(b=>{
+    if(b.textContent===word.py)b.classList.add('correct');
+    b.classList.add('locked');
+  });
+  if(correct){
+    bonPassedPinyin=true;
+    document.getElementById('bon-feedback').textContent='✓ Correct pinyin!';
+    document.getElementById('bon-feedback').style.color='var(--green)';
+    setTimeout(()=>renderBonusStep2(word),800);
+  } else {
+    if(!bonMissed.find(m=>m.ch===word.ch)) bonMissed.push(word);
+    document.getElementById('bon-feedback').textContent=`✗ Pinyin was: ${word.py}`;
+    document.getElementById('bon-feedback').style.color='var(--red)';
+    const nb=document.getElementById('bon-next');
+    nb.textContent='Skip →'; nb.style.display='block';
+    nb.onclick=()=>{bonIdx++;renderBonusStep1();};
+  }
+}
+
+function renderBonusStep2(word){
+  bonStep=2; bonLocked=false;
+  setBonBadges(2);
+  document.getElementById('bon-prompt').textContent=word.en;
+  document.getElementById('bon-sub').textContent='Step 2 — which character is correct?';
+  const hint=document.getElementById('bon-hint');
+  hint.style.display='block';
+  hint.innerHTML=`Pinyin confirmed: <strong style="color:var(--green)">${word.py}</strong>`;
+  document.getElementById('bon-feedback').textContent='';
+  document.getElementById('bon-next').style.display='none';
+
+  const wrongs=[...ALL_WORDS].filter(x=>x.ch!==word.ch).sort(()=>Math.random()-.5).slice(0,3);
+  const choices=[word,...wrongs].sort(()=>Math.random()-.5);
+  const box=document.getElementById('bon-choices');
+  box.innerHTML=''; box.style.gridTemplateColumns='1fr 1fr';
+  choices.forEach(w2=>{
+    const btn=document.createElement('button');
+    btn.className='quiz-choice';
+    btn.style.fontFamily="'Noto Serif SC',serif";
+    btn.style.fontSize='clamp(20px,6vw,30px)'; btn.style.padding='14px 8px';
+    btn.textContent=w2.ch;
+    btn.onclick=()=>handleBonusStep2(btn,w2,word);
+    box.appendChild(btn);
+  });
+}
+
+function handleBonusStep2(btn,chosen,correct){
+  if(bonLocked)return; bonLocked=true;
+  const isCorrect=chosen.ch===correct.ch;
+  btn.classList.add(isCorrect?'correct':'wrong');
+  document.querySelectorAll('#bon-choices .quiz-choice').forEach(b=>{
+    if(b.textContent===correct.ch)b.classList.add('correct');
+    b.classList.add('locked');
+  });
+  if(isCorrect){
+    document.getElementById('bon-feedback').textContent='✓ Correct character!';
+    document.getElementById('bon-feedback').style.color='var(--green)';
+    setTimeout(()=>renderBonusStep3(correct),800);
+  } else {
+    if(!bonMissed.find(m=>m.ch===correct.ch)) bonMissed.push(correct);
+    document.getElementById('bon-feedback').textContent=`✗ Character was: ${correct.ch}`;
+    document.getElementById('bon-feedback').style.color='var(--red)';
+    const nb=document.getElementById('bon-next');
+    nb.textContent='Skip →'; nb.style.display='block';
+    nb.onclick=()=>{bonIdx++;renderBonusStep1();};
+  }
+}
+
+function renderBonusStep3(word){
+  bonStep=3; bonLocked=false;
+  setBonBadges(3);
+  document.getElementById('bon-prompt').textContent=word.en;
+  document.getElementById('bon-sub').textContent='Step 3 — confirm the full word!';
+  const hint=document.getElementById('bon-hint');
+  hint.style.display='block';
+  hint.innerHTML=`Pinyin: <strong style="color:var(--green)">${word.py}</strong> &nbsp;|&nbsp; Character: <strong style="color:var(--red);font-family:'Noto Serif SC',serif;font-size:16px">${word.ch}</strong>`;
+  document.getElementById('bon-feedback').textContent='';
+  document.getElementById('bon-next').style.display='none';
+
+  const wrongs=[...ALL_WORDS].filter(x=>x.ch!==word.ch).sort(()=>Math.random()-.5).slice(0,3);
+  const choices=[word,...wrongs].sort(()=>Math.random()-.5);
+  const box=document.getElementById('bon-choices');
+  box.innerHTML=''; box.style.gridTemplateColumns='1fr 1fr';
+  choices.forEach(w2=>{
+    const btn=document.createElement('button');
+    btn.className='quiz-choice';
+    btn.style.lineHeight='1.6'; btn.style.padding='12px 6px';
+    btn.innerHTML=`<span style="font-size:22px;display:block;font-family:'Noto Serif SC',serif;color:var(--red)">${w2.ch}</span><span style="font-size:9px;font-family:'Space Mono',monospace;color:var(--muted)">${w2.py}</span>`;
+    btn.onclick=()=>handleBonusStep3(btn,w2,word);
+    box.appendChild(btn);
+  });
+}
+
+function handleBonusStep3(btn,chosen,correct){
+  if(bonLocked)return; bonLocked=true;
+  const isCorrect=chosen.ch===correct.ch;
+  btn.classList.add(isCorrect?'correct':'wrong');
+  document.querySelectorAll('#bon-choices .quiz-choice').forEach(b=>{
+    const span=b.querySelector('span');
+    if(span&&span.textContent===correct.ch)b.classList.add('correct');
+    b.classList.add('locked');
+  });
+  if(isCorrect){
+    bonScore++;
+    document.getElementById('bon-feedback').textContent='🎉 Perfect! All 3 steps correct!';
+    document.getElementById('bon-feedback').style.color='var(--green)';
+  } else {
+    if(!bonMissed.find(m=>m.ch===correct.ch)) bonMissed.push(correct);
+    document.getElementById('bon-feedback').textContent=`✗ It was: ${correct.ch} (${correct.py})`;
+    document.getElementById('bon-feedback').style.color='var(--red)';
+  }
+  const nb=document.getElementById('bon-next');
+  nb.textContent='Next →'; nb.style.display='block';
+  nb.onclick=()=>{bonIdx++;renderBonusStep1();};
+}
+
+function showBonusResult(){
+  document.getElementById('bonus-running').style.display='none';
+  const br=document.getElementById('bonus-result');
+  br.style.display='flex';
+  document.getElementById('bon-res-score').textContent=bonScore;
+  document.getElementById('bon-res-label').textContent=`out of ${bonWords.length} (all 3 steps)`;
+  const pct=Math.round(bonScore/bonWords.length*100);
+  let grade='优秀 ✨'; if(pct<60) grade='继续加油 💪'; else if(pct<80) grade='很好 👍';
+  document.getElementById('bon-res-grade').textContent=grade+` (${pct}%)`;
+  const mb=document.getElementById('bon-res-missed');
+  const ml=document.getElementById('bon-res-missed-list');
+  ml.innerHTML='';
+  if(bonMissed.length){
+    mb.style.display='block';
+    bonMissed.forEach(w=>{
+      ml.innerHTML+=`<div class="missed-item"><span class="mi-ch">${w.ch}</span><span class="mi-py">${w.py}</span><span class="mi-en">${w.en}</span></div>`;
+    });
+  } else mb.style.display='none';
+}
+
+// ══════════════════════════════════════════
+// SENTENCE COMPLETION EXERCISE
+// ══════════════════════════════════════════
+const SENTENCES = {
+ 1:[
+  {sent:"我的＿姨很漂亮。",answer:"阿",translation:"My aunt is very beautiful.",opts:["阿","他","我","你"]},
+  {sent:"她个子很＿。",answer:"矮",translation:"She is very short.",opts:["矮","高","大","小"]},
+  {sent:"我的爱＿是打球。",answer:"好",translation:"My hobby is playing ball.",opts:["好","坏","多","少"]},
+  {sent:"图书馆里很安＿。",answer:"静",translation:"The library is very quiet.",opts:["静","动","快","慢"]},
+  {sent:"请＿那本书给我。",answer:"把",translation:"Please give me that book.",opts:["把","被","从","让"]},
+  {sent:"我们＿的作业很多。",answer:"班",translation:"Our class has a lot of homework.",opts:["班","组","队","级"]},
+  {sent:"他帮我＿走了桌子。",answer:"搬",translation:"He helped me move the table away.",opts:["搬","拿","带","放"]},
+  {sent:"爸爸在＿公室工作。",answer:"办",translation:"Dad works in the office.",opts:["办","公","室","厂"]},
+  {sent:"我来帮＿吧！",answer:"忙",translation:"Let me help!",opts:["忙","你","他","我"]},
+  {sent:"她背着一个大＿。",answer:"包",translation:"She's carrying a big bag.",opts:["包","箱","袋","盒"]},
+ ],
+ 2:[
+  {sent:"这栋楼有三＿。",answer:"层",translation:"This building has three floors.",opts:["层","楼","级","排"]},
+  {sent:"他的成绩很＿。",answer:"差",translation:"His grades are very poor.",opts:["差","好","高","低"]},
+  {sent:"我去＿市买菜。",answer:"超",translation:"I went to the supermarket.",opts:["超","商","百","大"]},
+  {sent:"他穿了一件白＿衫。",answer:"衬",translation:"He wore a white shirt.",opts:["衬","上","外","运"]},
+  {sent:"她的考试成＿很好。",answer:"绩",translation:"Her exam results are very good.",opts:["绩","果","效","就"]},
+  {sent:"北京是一座大城＿。",answer:"市",translation:"Beijing is a big city.",opts:["市","村","乡","镇"]},
+  {sent:"他上课经常＿到。",answer:"迟",translation:"He is often late to class.",opts:["迟","早","准","快"]},
+  {sent:"＿了他，没有别人来。",answer:"除",translation:"Except for him, no one else came.",opts:["除","包","加","减"]},
+  {sent:"我们坐＿去旅游。",answer:"船",translation:"We traveled by boat.",opts:["船","车","机","地"]},
+  {sent:"＿天来了，天气变暖了。",answer:"春",translation:"Spring has come, the weather is warmer.",opts:["春","夏","秋","冬"]},
+ ],
+ 3:[
+  {sent:"请查一下＿典。",answer:"词",translation:"Please check the dictionary.",opts:["词","字","书","辞"]},
+  {sent:"这个孩子很聪＿。",answer:"明",translation:"This child is very smart.",opts:["明","智","亮","清"]},
+  {sent:"他从＿不迟到。",answer:"来",translation:"He never arrives late.",opts:["来","去","前","后"]},
+  {sent:"她做事情很粗＿。",answer:"心",translation:"She is careless in doing things.",opts:["心","细","大","小"]},
+  {sent:"我每天都＿扫房间。",answer:"打",translation:"I clean the room every day.",opts:["打","洗","整","擦"]},
+  {sent:"我＿算明天去旅游。",answer:"打",translation:"I plan to go travel tomorrow.",opts:["打","想","准","计"]},
+  {sent:"请＿伞，要下雨了。",answer:"带",translation:"Please bring an umbrella.",opts:["带","拿","取","背"]},
+  {sent:"妈妈很担＿我。",answer:"心",translation:"Mom worries about me a lot.",opts:["心","忧","关","操"]},
+  {sent:"我给你买了蛋＿。",answer:"糕",translation:"I bought you a cake.",opts:["糕","奶","米","面"]},
+  {sent:"当＿，他是对的。",answer:"然",translation:"Of course, he is right.",opts:["然","自","确","必"]},
+ ],
+ 4:[
+  {sent:"他做事很认真，我们应该向他学＿。",answer:"习",translation:"We should learn from him.",opts:["习","看","说","做"]},
+  {sent:"这件事让我很害＿。",answer:"怕",translation:"This thing makes me very scared.",opts:["怕","可","惊","担"]},
+  {sent:"老师在黑板＿写字。",answer:"上",translation:"The teacher writes on the blackboard.",opts:["上","里","中","下"]},
+  {sent:"后来他搬到了上＿。",answer:"海",translation:"Later he moved to Shanghai.",opts:["海","京","广","沪"]},
+  {sent:"医院里有很多护＿。",answer:"士",translation:"There are many nurses in the hospital.",opts:["士","医","工","员"]},
+  {sent:"公园里的花很＿亮。",answer:"漂",translation:"The flowers in the park are beautiful.",opts:["漂","好","美","鲜"]},
+  {sent:"他在本子上画了一幅＿。",answer:"画",translation:"He drew a picture in his notebook.",opts:["画","字","图","像"]},
+  {sent:"这台电脑坏＿了，用不了。",answer:"掉",translation:"This computer is broken and can't be used.",opts:["掉","了","旧","慢"]},
+  {sent:"我们要保护环＿。",answer:"境",translation:"We need to protect the environment.",opts:["境","自","生","地"]},
+  {sent:"我想把旧衣服换＿。",answer:"掉",translation:"I want to exchange these old clothes.",opts:["掉","买","送","扔"]},
+ ],
+ 5:[
+  {sent:"这道题很简单＿。",answer:"吗",translation:"Is this question very simple?",opts:["吗","啊","吧","呢"]},
+  {sent:"多运动对健康有好＿。",answer:"处",translation:"Exercising more is good for your health.",opts:["处","益","利","助"]},
+  {sent:"我们明天在学校门口见＿。",answer:"面",translation:"We'll meet at the school entrance tomorrow.",opts:["面","碰","遇","谈"]},
+  {sent:"将来我想当医＿。",answer:"生",translation:"In the future I want to be a doctor.",opts:["生","护","工","员"]},
+  {sent:"他在大学里教数＿。",answer:"学",translation:"He teaches mathematics at university.",opts:["学","物","化","语"]},
+  {sent:"我的脚很痛，走不了＿。",answer:"路",translation:"My foot hurts a lot, I can't walk.",opts:["路","步","行","跑"]},
+  {sent:"我去机场接＿。",answer:"她",translation:"I went to the airport to pick her up.",opts:["她","他","你","我"]},
+  {sent:"我家住在一条小街＿旁边。",answer:"道",translation:"My home is next to a small street.",opts:["道","路","巷","弄"]},
+  {sent:"这个电视节目很有意＿。",answer:"思",translation:"This TV programme is very interesting.",opts:["思","义","味","趣"]},
+  {sent:"今天是我们学校的节＿。",answer:"日",translation:"Today is our school's festival day.",opts:["日","天","时","期"]},
+ ],
+ 6:[
+  {sent:"她肯定能赢得比＿。",answer:"赛",translation:"She will definitely win the competition.",opts:["赛","赛","场","局","战"]},
+  {sent:"夏天要开空调，不然很＿。",answer:"热",translation:"You need the AC in summer, otherwise it's very hot.",opts:["热","冷","暖","烫"]},
+  {sent:"外面的空气很清＿。",answer:"新",translation:"The air outside is very fresh.",opts:["新","鲜","净","爽"]},
+  {sent:"她一个人在房间里哭＿。",answer:"泣",translation:"She was crying alone in the room.",opts:["泣","笑","叫","喊"]},
+  {sent:"这条裤子太长＿。",answer:"了",translation:"These trousers are too long.",opts:["了","吗","啊","呢"]},
+  {sent:"吃饭要用筷子＿。",answer:"吃",translation:"You use chopsticks to eat.",opts:["吃","喝","用","拿"]},
+  {sent:"天空是蓝＿的。",answer:"色",translation:"The sky is blue.",opts:["色","天","光","气"]},
+  {sent:"这位老人已经很老＿。",answer:"了",translation:"This elderly person is already very old.",opts:["了","吗","啊","呢"]},
+  {sent:"我家＿学校很近。",answer:"离",translation:"My home is very close to school.",opts:["离","到","在","从"]},
+  {sent:"这是送给你的礼物＿。",answer:"吗",translation:"Is this the gift for you?",opts:["吗","啊","吧","呢"]},
+ ],
+ 7:[
+  {sent:"你现在明白＿？",answer:"了",translation:"Do you understand now?",opts:["了","吗","吧","呢"]},
+  {sent:"目前我们还没找到答＿。",answer:"案",translation:"Currently we haven't found the answer.",opts:["案","题","法","果"]},
+  {sent:"请把那本书拿＿我。",answer:"给",translation:"Please bring me that book.",opts:["给","来","送","带"]},
+  {sent:"奶奶做的饭最好＿。",answer:"吃",translation:"Grandma's cooking is the best.",opts:["吃","做","喝","看"]},
+  {sent:"我来自中国南＿。",answer:"方",translation:"I come from southern China.",opts:["方","部","边","面"]},
+  {sent:"这道题太难＿，我不会。",answer:"了",translation:"This question is too difficult, I can't do it.",opts:["了","吗","啊","吧"]},
+  {sent:"他听到消息很难＿。",answer:"过",translation:"He felt very sad when he heard the news.",opts:["过","受","得","忍"]},
+  {sent:"她在学校读五年级＿。",answer:"了",translation:"She is in fifth grade at school.",opts:["了","吗","吧","呢"]},
+  {sent:"你多大年龄＿？",answer:"了",translation:"How old are you now?",opts:["了","吗","啊","呢"]},
+  {sent:"学习要努力，不能放＿。",answer:"弃",translation:"You need to work hard at studying, you can't give up.",opts:["弃","手","松","心"]},
+ ],
+ 8:[
+  {sent:"你能请假明天＿来吗？",answer:"不",translation:"Can you not come tomorrow with leave?",opts:["不","再","都","也"]},
+  {sent:"北方的秋天很＿。",answer:"冷",translation:"Autumn in the north is very cold.",opts:["冷","热","凉","暖"]},
+  {sent:"她穿着一条漂亮的裙＿。",answer:"子",translation:"She's wearing a beautiful skirt.",opts:["子","条","件","片"]},
+  {sent:"然后，我们一起去吃＿吧。",answer:"饭",translation:"After that, let's go eat together.",opts:["饭","饺","面","菜"]},
+  {sent:"他对工作非常热＿。",answer:"爱",translation:"He loves his work very much.",opts:["爱","心","情","力"]},
+  {sent:"我认为他是最好的老＿。",answer:"师",translation:"I think he is the best teacher.",opts:["师","生","员","工"]},
+  {sent:"做作业要认真，不能马＿。",answer:"虎",translation:"You need to be serious about homework, you can't be careless.",opts:["虎","大","上","草"]},
+  {sent:"这件事很容易，你一定能做＿。",answer:"到",translation:"This is very easy, you can definitely do it.",opts:["到","好","完","成"]},
+  {sent:"如果你来，我会很高＿。",answer:"兴",translation:"If you come, I'll be very happy.",opts:["兴","兴","乐","福","兴"]},
+  {sent:"下雨了，快拿伞＿！",answer:"吧",translation:"It's raining, quickly get the umbrella!",opts:["吧","吗","啊","呢"]},
+ ],
+ 9:[
+  {sent:"夏天的太阳很＿。",answer:"强",translation:"The sun is very strong in summer.",opts:["强","热","大","亮"]},
+  {sent:"这部电影特别＿看。",answer:"好",translation:"This film is especially good.",opts:["好","难","有","可"]},
+  {sent:"我的头很疼，需要＿息。",answer:"休",translation:"My head hurts a lot, I need to rest.",opts:["休","睡","停","歇"]},
+  {sent:"她的中文水平提高了很＿。",answer:"多",translation:"Her Chinese level has improved a lot.",opts:["多","大","快","好"]},
+  {sent:"我喜欢上体育＿。",answer:"课",translation:"I like physical education class.",opts:["课","操","健","动"]},
+  {sent:"这个蛋糕很＿，我喜欢。",answer:"甜",translation:"This cake is very sweet, I like it.",opts:["甜","苦","酸","辣"]},
+  {sent:"我买了三条裙＿。",answer:"子",translation:"I bought three skirts.",opts:["子","件","个","双"]},
+  {sent:"他是我的好同＿。",answer:"事",translation:"He is my good colleague.",opts:["事","学","伴","友"]},
+  {sent:"你同意这个计划＿？",answer:"吗",translation:"Do you agree with this plan?",opts:["吗","啊","吧","呢"]},
+  {sent:"我们学校有一个大图书馆＿。",answer:"吗",translation:"Does our school have a big library?",opts:["吗","啊","吧","呢"]},
+ ],
+10:[
+  {sent:"我们一起去游＿吧！",answer:"泳",translation:"Let's go swimming together!",opts:["泳","跑","跳","步"]},
+  {sent:"我向前走了五分＿。",answer:"钟",translation:"I walked forward for five minutes.",opts:["钟","时","分","秒"]},
+  {sent:"他的声音很像他爸爸＿。",answer:"的",translation:"His voice sounds just like his dad's.",opts:["的","吗","啊","呢"]},
+  {sent:"路边有很多小吃＿。",answer:"摊",translation:"There are many food stalls on the roadside.",opts:["摊","店","铺","馆"]},
+  {sent:"大家都在笑，气氛很＿。",answer:"好",translation:"Everyone was laughing, the atmosphere was great.",opts:["好","热","棒","高"]},
+  {sent:"我给妈妈写了一封信＿。",answer:"吗",translation:"Did I write a letter to my mum?",opts:["吗","吧","啊","呢"]},
+  {sent:"我的行李箱太重＿。",answer:"了",translation:"My suitcase is too heavy.",opts:["了","吗","啊","呢"]},
+  {sent:"学好中文需要很多时＿。",answer:"间",translation:"Learning Chinese well requires a lot of time.",opts:["间","候","期","刻"]},
+  {sent:"请选择你喜欢的答＿。",answer:"案",translation:"Please choose the answer you like.",opts:["案","题","法","项"]},
+  {sent:"她的眼睛很大很漂＿。",answer:"亮",translation:"Her eyes are very big and beautiful.",opts:["亮","美","好","靓"]},
+ ],
+11:[
+  {sent:"于是，我们找到了答＿。",answer:"案",translation:"So, we found the answer.",opts:["案","题","法","果"]},
+  {sent:"今天的天气很愉快＿。",answer:"吗",translation:"Is today's weather very pleasant?",opts:["吗","啊","吧","呢"]},
+  {sent:"他家住得很远，要开车一小＿。",answer:"时",translation:"He lives very far, it takes an hour to drive.",opts:["时","分","钟","刻"]},
+  {sent:"晚上我看到了月亮＿。",answer:"吗",translation:"Did I see the moon in the evening?",opts:["吗","啊","吧","呢"]},
+  {sent:"越努力，成绩越好＿。",answer:"吗",translation:"The harder you work, the better your results?",opts:["吗","啊","吧","呢"]},
+  {sent:"别着急，慢慢＿。",answer:"来",translation:"Don't be anxious, take it slowly.",opts:["来","做","走","说"]},
+  {sent:"奶奶年纪大了，需要人照顾＿。",answer:"她",translation:"Grandma is old, she needs someone to take care of her.",opts:["她","他","你","我"]},
+  {sent:"他把照片发给我＿。",answer:"了",translation:"He sent me the photo.",opts:["了","吗","吧","呢"]},
+  {sent:"这种方法很好＿。",answer:"用",translation:"This method is very useful.",opts:["用","看","玩","做"]},
+  {sent:"你觉得这样做正确＿？",answer:"吗",translation:"Do you think doing it this way is correct?",opts:["吗","啊","吧","呢"]},
+ ],
+12:[
+  {sent:"我的爸爸个子很＿。",answer:"高",translation:"My dad is very tall.",opts:["高","大","强","胖"]},
+  {sent:"妈妈每天都做＿。",answer:"饭",translation:"Mum cooks every day.",opts:["饭","菜","汤","面"]},
+  {sent:"哥哥在北京工＿。",answer:"作",translation:"Older brother works in Beijing.",opts:["作","住","学","玩"]},
+  {sent:"我的姐姐很漂＿。",answer:"亮",translation:"My older sister is very pretty.",opts:["亮","美","好","靓"]},
+  {sent:"弟弟今年八＿了。",answer:"岁",translation:"Younger brother is eight years old.",opts:["岁","年","月","天"]},
+  {sent:"我和妹妹一起上＿。",answer:"学",translation:"My younger sister and I go to school together.",opts:["学","课","班","校"]},
+  {sent:"他是我最好的朋友＿。",answer:"吗",translation:"Is he my best friend?",opts:["吗","啊","吧","呢"]},
+  {sent:"全班同学都＿了。",answer:"来",translation:"All the classmates have come.",opts:["来","到","在","有"]},
+  {sent:"老师让我们做作＿。",answer:"业",translation:"The teacher asked us to do homework.",opts:["业","业","题","文","习"]},
+  {sent:"这个学生学习很努＿。",answer:"力",translation:"This student studies very hard.",opts:["力","气","心","劲"]},
+ ],
+13:[
+  {sent:"他开火车去北＿。",answer:"京",translation:"He took the train to Beijing.",opts:["京","海","广","沪"]},
+  {sent:"骑自行车上学很健＿。",answer:"康",translation:"Riding a bicycle to school is very healthy.",opts:["康","身","体","强"]},
+  {sent:"请把手机关＿。",answer:"掉",translation:"Please turn off your mobile phone.",opts:["掉","好","上","下"]},
+  {sent:"我用电脑查＿料。",answer:"资",translation:"I use the computer to look up information.",opts:["资","信","数","文"]},
+  {sent:"天气预报说明天下＿。",answer:"雨",translation:"The weather forecast says it will rain tomorrow.",opts:["雨","雪","风","冰"]},
+  {sent:"今天温度很＿。",answer:"低",translation:"The temperature is very low today.",opts:["低","高","热","冷"]},
+  {sent:"下雨了，要带＿。",answer:"伞",translation:"It's raining, you need to bring an umbrella.",opts:["伞","雨","衣","帽"]},
+  {sent:"北方冬天会下雪＿。",answer:"吗",translation:"Does it snow in the north in winter?",opts:["吗","啊","吧","呢"]},
+  {sent:"今天好冷，要多穿衣＿。",answer:"服",translation:"It's very cold today, you should wear more clothes.",opts:["服","衫","裤","裙"]},
+  {sent:"夏天太热了，开空调＿！",answer:"吧",translation:"It's too hot in summer, let's turn on the AC!",opts:["吧","吗","啊","呢"]},
+ ],
+14:[
+  {sent:"我们点了一个酸汤＿的菜。",answer:"味",translation:"We ordered a sour soup flavoured dish.",opts:["味","道","香","辣"]},
+  {sent:"请来一杯咖啡＿。",answer:"吧",translation:"Please bring a cup of coffee!",opts:["吧","吗","啊","呢"]},
+  {sent:"中国人很爱喝＿。",answer:"茶",translation:"Chinese people love drinking tea.",opts:["茶","水","奶","汤"]},
+  {sent:"小孩子每天要喝牛奶＿。",answer:"吗",translation:"Do children need to drink milk every day?",opts:["吗","啊","吧","呢"]},
+  {sent:"这个菜太辣＿，我不能吃。",answer:"了",translation:"This dish is too spicy, I can't eat it.",opts:["了","吗","吧","呢"]},
+  {sent:"柠檬的味道很＿。",answer:"酸",translation:"Lemons taste very sour.",opts:["酸","甜","苦","辣"]},
+  {sent:"这药很苦，要加点＿。",answer:"糖",translation:"This medicine is very bitter, add some sugar.",opts:["糖","盐","醋","酱"]},
+  {sent:"这个汤太咸了，少放点＿。",answer:"盐",translation:"This soup is too salty, add less salt.",opts:["盐","糖","醋","油"]},
+  {sent:"天冷了，要多穿衣＿。",answer:"服",translation:"It's getting cold, wear more clothes.",opts:["服","衫","裤","裙"]},
+  {sent:"这双鞋子很舒＿。",answer:"服",translation:"These shoes are very comfortable.",opts:["服","适","好","棒"]},
+ ],
+15:[
+  {sent:"这次考试你考了多少＿？",answer:"分",translation:"How many marks did you get in this exam?",opts:["分","题","卷","名"]},
+  {sent:"他成功地完成了任＿。",answer:"务",translation:"He successfully completed the task.",opts:["务","务","工","事","作"]},
+  {sent:"你的汉语进步很＿。",answer:"大",translation:"Your Chinese has improved a lot.",opts:["大","多","快","好"]},
+  {sent:"我的英语不太＿。",answer:"好",translation:"My English is not very good.",opts:["好","差","高","强"]},
+  {sent:"你喜欢什么颜色＿？",answer:"啊",translation:"What colour do you like?",opts:["啊","吗","吧","呢"]},
+  {sent:"这朵花是红色＿。",answer:"的",translation:"This flower is red.",opts:["的","了","吗","啊"]},
+  {sent:"草地是绿色＿。",answer:"的",translation:"The grass is green.",opts:["的","了","吗","啊"]},
+  {sent:"香蕉是黄色＿。",answer:"的",translation:"Bananas are yellow.",opts:["的","了","吗","啊"]},
+  {sent:"雪是白色＿。",answer:"的",translation:"Snow is white.",opts:["的","了","吗","啊"]},
+  {sent:"她的头发是黑色＿。",answer:"的",translation:"Her hair is black.",opts:["的","了","吗","啊"]},
+ ],
+16:[
+  {sent:"我有一个好计划＿。",answer:"吗",translation:"Do I have a good plan?",opts:["吗","啊","吧","呢"]},
+  {sent:"你对这件事有什么想＿？",answer:"法",translation:"What do you think about this matter?",opts:["法","念","见","意"]},
+  {sent:"他的学习态度很＿。",answer:"好",translation:"His attitude towards studying is very good.",opts:["好","差","高","强"]},
+  {sent:"多运动是健康的优＿。",answer:"点",translation:"Exercising more is a health advantage.",opts:["点","处","面","益"]},
+  {sent:"这个计划有一个缺点＿。",answer:"吗",translation:"Does this plan have a flaw?",opts:["吗","啊","吧","呢"]},
+  {sent:"今天的新闻很重＿。",answer:"要",translation:"Today's news is very important.",opts:["要","大","多","紧"]},
+  {sent:"他每天看报纸＿。",answer:"吗",translation:"Does he read the newspaper every day?",opts:["吗","啊","吧","呢"]},
+  {sent:"这个广告很有创＿。",answer:"意",translation:"This advertisement is very creative.",opts:["意","新","趣","味"]},
+  {sent:"请访问我们的网站＿。",answer:"吧",translation:"Please visit our website!",opts:["吧","吗","啊","呢"]},
+  {sent:"中国经济发展很＿。",answer:"快",translation:"China's economy is developing very fast.",opts:["快","大","好","多"]},
+ ],
+17:[
+  {sent:"你已经完成了所有作业＿？",answer:"吗",translation:"Have you already finished all the homework?",opts:["吗","啊","吧","呢"]},
+  {sent:"他还在学校＿。",answer:"里",translation:"He is still at school.",opts:["里","面","中","内"]},
+  {sent:"我们下次再去爬＿吧。",answer:"山",translation:"Let's go hiking again next time.",opts:["山","海","湖","河"]},
+  {sent:"班里的同学都来＿。",answer:"了",translation:"All the classmates in the class have come.",opts:["了","吗","吧","呢"]},
+  {sent:"我就知道这个答案＿。",answer:"了",translation:"I already knew this answer.",opts:["了","吗","吧","呢"]},
+  {sent:"她才学了三个月就会说中文＿。",answer:"了",translation:"She already speaks Chinese after only three months.",opts:["了","吗","吧","呢"]},
+  {sent:"我只有一个问题＿。",answer:"吗",translation:"Do I only have one question?",opts:["吗","啊","吧","呢"]},
+  {sent:"他大约三十＿了。",answer:"岁",translation:"He is approximately thirty years old.",opts:["岁","年","月","天"]},
+  {sent:"这道题可能有三种解＿。",answer:"法",translation:"This problem may have three solutions.",opts:["法","答","题","方"]},
+  {sent:"他一直都没有放＿。",answer:"弃",translation:"He never gave up.",opts:["弃","手","松","心"]},
+ ],
+18:[
+  {sent:"请把这段话翻译成中＿。",answer:"文",translation:"Please translate this passage into Chinese.",opts:["文","话","字","语"]},
+  {sent:"他很善于表达自＿的想法。",answer:"己",translation:"He is very good at expressing his ideas.",opts:["己","我","他","你"]},
+  {sent:"我们要多交流，互相学＿。",answer:"习",translation:"We should communicate more and learn from each other.",opts:["习","看","说","做"]},
+  {sent:"感谢你帮助＿。",answer:"我",translation:"Thank you for helping me.",opts:["我","他","她","你"]},
+  {sent:"他向大家道歉＿。",answer:"了",translation:"He apologised to everyone.",opts:["了","吗","吧","呢"]},
+  {sent:"老师鼓励我们努力学＿。",answer:"习",translation:"The teacher encouraged us to study hard.",opts:["习","看","说","做"]},
+  {sent:"她用甜蜜的话安慰＿。",answer:"他",translation:"She comforted him with sweet words.",opts:["他","她","我","你"]},
+  {sent:"他来帮助我搬＿。",answer:"家",translation:"He came to help me move house.",opts:["家","东","箱","物"]},
+  {sent:"这里不允许吸＿。",answer:"烟",translation:"Smoking is not permitted here.",opts:["烟","酒","火","食"]},
+  {sent:"请继续往下＿。",answer:"读",translation:"Please continue reading further.",opts:["读","看","说","写"]},
+ ],
+19:[
+  {sent:"今年是我工作的第三＿。",answer:"年",translation:"This year is my third year of work.",opts:["年","月","天","周"]},
+  {sent:"这件事我要考虑一段时间＿。",answer:"吗",translation:"Do I need to think about this for a while?",opts:["吗","啊","吧","呢"]},
+  {sent:"目前情况不太好，需要改变策＿。",answer:"略",translation:"The situation is not great, we need to change strategy.",opts:["略","法","方","计"]},
+  {sent:"你需要满足以下条件＿。",answer:"吗",translation:"Do you need to meet the following requirements?",opts:["吗","啊","吧","呢"]},
+  {sent:"这份文件的内容很重要＿。",answer:"吗",translation:"Is the content of this document very important?",opts:["吗","啊","吧","呢"]},
+  {sent:"请遵守这里的规＿。",answer:"定",translation:"Please follow the rules here.",opts:["定","矩","范","则"]},
+  {sent:"请按照标准格式填＿。",answer:"写",translation:"Please fill in according to the standard format.",opts:["写","做","说","读"]},
+  {sent:"为了学好中文，我每天练＿。",answer:"习",translation:"In order to learn Chinese well, I practise every day.",opts:["习","说","写","读"]},
+  {sent:"对于这个问题，我有不同看＿。",answer:"法",translation:"Regarding this question, I have a different view.",opts:["法","点","见","意"]},
+  {sent:"由于下雨，比赛推迟＿。",answer:"了",translation:"Due to rain, the match was postponed.",opts:["了","吗","吧","呢"]},
+ ],
+20:[
+  {sent:"我们通过努力实现了目＿。",answer:"标",translation:"We achieved our goal through persistent effort.",opts:["标","标","的","标","标"]},
+  {sent:"超市就在我家旁边＿。",answer:"吗",translation:"Is the supermarket right next to my home?",opts:["吗","啊","吧","呢"]},
+  {sent:"前面有一家餐＿。",answer:"厅",translation:"There's a restaurant ahead.",opts:["厅","馆","店","室"]},
+  {sent:"把书放在椅子后面＿。",answer:"吧",translation:"Put the book behind the chair, OK?",opts:["吧","吗","啊","呢"]},
+  {sent:"请走左边那条＿。",answer:"路",translation:"Please take the road on the left side.",opts:["路","道","街","巷"]},
+  {sent:"银行就在邮局对面＿。",answer:"吗",translation:"Is the bank right opposite the post office?",opts:["吗","啊","吧","呢"]},
+  {sent:"把东西放到箱子里面＿。",answer:"吧",translation:"Put the things inside the box, OK?",opts:["吧","吗","啊","呢"]},
+  {sent:"比赛快要开始＿。",answer:"了",translation:"The competition is about to start.",opts:["了","吗","吧","呢"]},
+  {sent:"他踢足球踢得很好＿。",answer:"吗",translation:"Does he play football very well?",opts:["吗","啊","吧","呢"]},
+  {sent:"她喜欢打篮球＿。",answer:"吗",translation:"Does she like playing basketball?",opts:["吗","啊","吧","呢"]},
+ ],
+21:[
+  {sent:"春节是中国最重要的节日＿。",answer:"吗",translation:"Is Spring Festival China's most important holiday?",opts:["吗","啊","吧","呢"]},
+  {sent:"今天是我的生日，大家来庆＿！",answer:"祝",translation:"Today is my birthday, everyone come celebrate!",opts:["祝","庆","贺","喜"]},
+  {sent:"这是我们公司的传统习＿。",answer:"俗",translation:"This is our company's traditional custom.",opts:["俗","惯","规","例"]},
+  {sent:"她的画作是一件艺术＿。",answer:"品",translation:"Her painting is a work of art.",opts:["品","作","件","物"]},
+  {sent:"去法国需要申请签＿。",answer:"证",translation:"You need to apply for a visa to go to France.",opts:["证","书","卡","照"]},
+  {sent:"请把护照准备＿。",answer:"好",translation:"Please have your passport ready.",opts:["好","完","齐","妥"]},
+  {sent:"你的行李太重＿。",answer:"了",translation:"Your luggage is too heavy.",opts:["了","吗","吧","呢"]},
+  {sent:"请找到你的座位坐＿。",answer:"好",translation:"Please find your seat and sit properly.",opts:["好","下","上","定"]},
+  {sent:"飞机什么时候出发＿？",answer:"啊",translation:"When does the plane depart?",opts:["啊","吗","吧","呢"]},
+  {sent:"我们终于到达目的地＿！",answer:"了",translation:"We finally arrived at our destination!",opts:["了","吗","吧","呢"]},
+ ],
+22:[
+  {sent:"他有丰富的工作经验＿。",answer:"吗",translation:"Does he have rich work experience?",opts:["吗","啊","吧","呢"]},
+  {sent:"我们需要提高工作效率＿。",answer:"吗",translation:"Do we need to improve work efficiency?",opts:["吗","啊","吧","呢"]},
+  {sent:"保护环境是我们的责＿。",answer:"任",translation:"Protecting the environment is our responsibility.",opts:["任","务","义","则"]},
+  {sent:"我们要学会回收利＿资源。",answer:"用",translation:"We need to learn to recycle and reuse resources.",opts:["用","废","再","节"]},
+  {sent:"你需要每天锻炼来保持健身＿。",answer:"吗",translation:"Do you need to exercise every day to stay fit?",opts:["吗","啊","吧","呢"]},
+  {sent:"医生让我吃这种药＿。",answer:"吗",translation:"Did the doctor tell me to take this medicine?",opts:["吗","啊","吧","呢"]},
+  {sent:"他做了一个大手术＿。",answer:"吗",translation:"Did he have a major surgery?",opts:["吗","啊","吧","呢"]},
+  {sent:"我申请了那所大＿。",answer:"学",translation:"I applied to that university.",opts:["学","校","院","所"]},
+  {sent:"明天我有一个面试＿。",answer:"吗",translation:"Do I have a job interview tomorrow?",opts:["吗","啊","吧","呢"]},
+  {sent:"请提交你的简历＿。",answer:"吧",translation:"Please submit your CV!",opts:["吧","吗","啊","呢"]},
+ ],
+23:[
+  {sent:"我喜欢网购，因为很方便＿。",answer:"啊",translation:"I like online shopping because it's very convenient!",opts:["啊","吗","吧","呢"]},
+  {sent:"请用支付宝付＿。",answer:"款",translation:"Please pay with Alipay.",opts:["款","钱","费","账"]},
+  {sent:"你需要输入密码＿。",answer:"吗",translation:"Do you need to enter the password?",opts:["吗","啊","吧","呢"]},
+  {sent:"请帮我下载这个文＿。",answer:"件",translation:"Please help me download this file.",opts:["件","件","章","档","卷"]},
+  {sent:"我在网上搜索资＿。",answer:"料",translation:"I search for information online.",opts:["料","讯","息","源"]},
+  {sent:"我们可以视频通＿。",answer:"话",translation:"We can video call.",opts:["话","讯","信","联"]},
+  {sent:"她有一百万粉丝＿。",answer:"啊",translation:"She has one million fans!",opts:["啊","吗","吧","呢"]},
+  {sent:"请写下你的评论＿。",answer:"吧",translation:"Please write your comment!",opts:["吧","吗","啊","呢"]},
+  {sent:"他把照片分享给了大家＿。",answer:"吗",translation:"Did he share the photo with everyone?",opts:["吗","啊","吧","呢"]},
+  {sent:"你关注了我的账号＿？",answer:"吗",translation:"Did you follow my account?",opts:["吗","啊","吧","呢"]},
+ ],
+24:[
+  {sent:"这次出差去了三个城市＿。",answer:"吗",translation:"Did this business trip go to three cities?",opts:["吗","啊","吧","呢"]},
+  {sent:"他是一个好老板＿。",answer:"吗",translation:"Is he a good boss?",opts:["吗","啊","吧","呢"]},
+  {sent:"两国之间的合作越来越好＿。",answer:"了",translation:"Cooperation between the two countries is getting better.",opts:["了","吗","吧","呢"]},
+  {sent:"这两家公司竞争很激＿。",answer:"烈",translation:"The competition between these two companies is very fierce.",opts:["烈","大","强","紧"]},
+  {sent:"他们的合作以失败告＿。",answer:"终",translation:"Their cooperation ended in failure.",opts:["终","终","完","束","止"]},
+  {sent:"他是一位优秀的律师＿。",answer:"吗",translation:"Is he an excellent lawyer?",opts:["吗","啊","吧","呢"]},
+  {sent:"这是一项很重要的工程＿。",answer:"吗",translation:"Is this a very important engineering project?",opts:["吗","啊","吧","呢"]},
+  {sent:"这些商品质量很好＿。",answer:"吗",translation:"Are these goods of very good quality?",opts:["吗","啊","吧","呢"]},
+  {sent:"他感到很大的压力＿。",answer:"吗",translation:"Does he feel a lot of pressure?",opts:["吗","啊","吧","呢"]},
+  {sent:"我需要请一周的休假＿。",answer:"吗",translation:"Do I need to take a week's holiday?",opts:["吗","啊","吧","呢"]},
+ ],
+};
+
+let sentDay=1, sentList=[], sentIdx=0, sentScore=0, sentMissed=[], sentLocked=false;
+
+function buildSentDaySelect(){
+  const sel=document.getElementById('sent-day-sel');
+  if(!sel) return;
+  sel.innerHTML='';
+  for(let d=1;d<=24;d++){
+    const o=document.createElement('option');
+    const count=Object.values(SENTENCES).slice(0,d).reduce((a,v)=>a+v.length,0);
+    o.value=d;
+    o.textContent=`Day ${d} — sentences from days 1–${d} (${count} sentences)`;
+    sel.appendChild(o);
+  }
+  sel.value=planData.startDay||1;
+}
+
+function loadSentenceDay(){
+  sentDay=parseInt(document.getElementById('sent-day-sel').value||1);
+  let pool=[];
+  for(let d=1;d<=sentDay;d++){
+    if(SENTENCES[d]) pool=pool.concat(SENTENCES[d]);
+  }
+  pool.sort(()=>Math.random()-.5);
+  sentList=pool.slice(0,Math.min(15,pool.length));
+  document.getElementById('sent-pool-info').textContent=`${pool.length} available`;
+}
+
+function startSentenceExercise(){
+  document.getElementById('ex-home').style.display='none';
+  document.getElementById('sent-result').style.display='none';
+  document.getElementById('sent-area').style.display='block';
+  buildSentDaySelect();
+  loadSentenceDay();
+  sentIdx=0; sentScore=0; sentMissed=[]; sentLocked=false;
+  renderSentQuestion();
+}
+
+function renderSentQuestion(){
+  if(sentIdx>=sentList.length){ showSentResult(); return; }
+  const s=sentList[sentIdx];
+  sentLocked=false;
+  const total=sentList.length;
+  document.getElementById('sent-prog').style.width=((sentIdx/total)*100)+'%';
+  document.getElementById('sent-q-num').textContent=`Sentence ${sentIdx+1} / ${total}  ·  Days 1–${sentDay}`;
+  document.getElementById('sent-score-bar').textContent=`${sentScore} / ${sentIdx}`;
+  document.getElementById('sent-feedback').textContent='';
+  document.getElementById('sent-next').style.display='none';
+  const display=s.sent.replace('＿','<span style="color:var(--red);font-weight:bold;font-size:1.1em;border-bottom:3px solid var(--red);padding:0 6px;min-width:1.2em;display:inline-block;">＿</span>');
+  document.getElementById('sent-sentence').innerHTML=display;
+  document.getElementById('sent-translation').textContent='🌍 '+s.translation;
+  const choices=[...s.opts].sort(()=>Math.random()-.5);
+  const box=document.getElementById('sent-choices');
+  box.innerHTML='';
+  choices.forEach(ch=>{
+    const btn=document.createElement('button');
+    btn.className='quiz-choice';
+    btn.style.fontFamily="'Noto Serif SC',serif";
+    btn.style.fontSize='clamp(20px,6vw,30px)';
+    btn.style.padding='14px 8px';
+    btn.textContent=ch;
+    btn.onclick=()=>handleSentAnswer(btn,ch,s);
+    box.appendChild(btn);
+  });
+}
+
+function handleSentAnswer(btn,chosen,s){
+  if(sentLocked)return; sentLocked=true;
+  const isCorrect=chosen===s.answer;
+  btn.classList.add(isCorrect?'correct':'wrong');
+  document.querySelectorAll('#sent-choices .quiz-choice').forEach(b=>{
+    if(b.textContent===s.answer)b.classList.add('correct');
+    b.classList.add('locked');
+  });
+  const fb=document.getElementById('sent-feedback');
+  const completed=s.sent.replace('＿',`<span style="color:var(${isCorrect?'--green':'--red'});font-weight:bold">${s.answer}</span>`);
+  document.getElementById('sent-sentence').innerHTML=completed;
+  if(isCorrect){
+    sentScore++;
+    fb.textContent='✓ 正确！Great job!';
+    fb.style.color='var(--green)';
+  } else {
+    const word=ALL_WORDS.find(w=>w.ch===s.answer||w.ch.includes(s.answer));
+    if(word&&!sentMissed.find(m=>m.ch===word.ch)) sentMissed.push(word);
+    else if(!sentMissed.find(m=>m.ch===s.answer)) sentMissed.push({ch:s.answer,py:'',en:s.translation});
+    fb.textContent=`✗ 正确答案是：${s.answer}`;
+    fb.style.color='var(--red)';
+  }
+  document.getElementById('sent-next').style.display='block';
+}
+
+function sentNext(){ sentIdx++; renderSentQuestion(); }
+
+function showSentResult(){
+  document.getElementById('sent-area').style.display='none';
+  document.getElementById('sent-result').style.display='block';
+  document.getElementById('sent-res-score').textContent=sentScore;
+  document.getElementById('sent-res-label').textContent=`out of ${sentList.length} sentences (Days 1–${sentDay})`;
+  const pct=Math.round(sentScore/sentList.length*100);
+  let grade='优秀 ✨'; if(pct<60) grade='继续加油 💪'; else if(pct<80) grade='很好 👍';
+  document.getElementById('sent-res-grade').textContent=grade+` (${pct}%)`;
+  const mb=document.getElementById('sent-res-missed');
+  const ml=document.getElementById('sent-res-missed-list');
+  ml.innerHTML='';
+  if(sentMissed.length){
+    mb.style.display='block';
+    sentMissed.forEach(w=>{
+      ml.innerHTML+=`<div class="missed-item"><span class="mi-ch">${w.ch}</span><span class="mi-py">${w.py}</span><span class="mi-en">${w.en}</span></div>`;
+    });
+  } else mb.style.display='none';
+}
+
+// ══════════════════════════════════════════
+// PLAN
 // ══════════════════════════════════════════
 let exType='', exWords=[], exIdx=0, exScore=0, exMissed=[];
 let exMatchSelected=null, exMatchPairs=[], exMatchDone=0;
@@ -1956,6 +2651,7 @@ function renderList2(){ doSearch2(); }
 // ══════════════════════════════════════════
 buildDaySelect();
 buildExDaySelect();
+buildSentDaySelect();
 applyFilter();
 updateDayBadge();
 </script>
