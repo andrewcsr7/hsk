@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HSK</title>
+<title>HSK 3 — 600 Words</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -134,7 +134,19 @@ select{border:1.5px solid var(--border);border-radius:4px;padding:7px 8px;font-f
 .result-btn.primary{background:var(--red);color:white;border-color:var(--red);}
 .result-btn.primary:hover{background:#a93226;}
 
-/* ═══ PLAN MODE ═══ */
+/* ═══ EXERCISES ═══ */
+.ex-card{border:1.5px solid var(--border);border-radius:8px;padding:14px;background:var(--paper);cursor:pointer;transition:all .15s;position:relative;}
+.ex-card:hover{border-color:var(--red);background:var(--soft);transform:translateY(-2px);}
+.ex-icon{font-size:22px;margin-bottom:6px;}
+.ex-title{font-size:11px;font-weight:bold;color:var(--ink);margin-bottom:4px;}
+.ex-desc{font-size:9px;color:var(--muted);line-height:1.5;}
+.ex-badge{position:absolute;top:10px;right:10px;font-size:8px;padding:2px 6px;border-radius:10px;background:var(--soft);color:var(--muted);border:1px solid var(--border);}
+.match-btn{border:1.5px solid var(--border);border-radius:6px;padding:10px 8px;font-family:'Space Mono';font-size:10px;background:var(--paper);cursor:pointer;transition:all .15s;text-align:center;line-height:1.4;}
+.match-btn:hover:not(.locked){border-color:var(--gold);background:var(--soft);}
+.match-btn.selected{border-color:var(--ink);background:var(--ink);color:var(--paper);}
+.match-btn.matched{border-color:var(--green);background:#e8f8ee;color:var(--green);}
+.match-btn.wrong-match{border-color:var(--red);background:#fcecea;color:var(--red);}
+.match-btn.locked{cursor:default;}
 .plan-view{display:none;padding:14px 16px;position:relative;z-index:1;}
 .plan-view.active{display:block;}
 .plan-header{max-width:780px;margin:0 auto 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
@@ -186,7 +198,8 @@ select{border:1.5px solid var(--border);border-radius:4px;padding:7px 8px;font-f
 
 <div class="nav-tabs">
   <button class="nav-tab active" onclick="setTab('cards')">🃏 Cards</button>
-  <button class="nav-tab" onclick="setTab('quiz')">📝 Quiz</button>
+  <button class="nav-tab" onclick="setTab('quiz')">🎯 Quiz</button>
+  <button class="nav-tab" onclick="setTab('exercises')">💪 Exercises</button>
   <button class="nav-tab" onclick="setTab('plan')">📅 Plan</button>
   <button class="nav-tab" onclick="setTab('list')">📋 List</button>
 </div>
@@ -324,6 +337,142 @@ select{border:1.5px solid var(--border);border-radius:4px;padding:7px 8px;font-f
     </div>
 
   </div>
+</div>
+
+<!-- ─── EXERCISES ─── -->
+<div id="tab-exercises" style="display:none">
+
+  <!-- Exercise Home -->
+  <div id="ex-home" style="padding:16px;max-width:600px;margin:0 auto;">
+    <h2 style="font-family:'Cormorant Garamond',serif;font-size:24px;margin-bottom:6px;">Daily Exercises 💪</h2>
+    <p style="font-size:10px;color:var(--muted);margin-bottom:18px;">Choose an exercise type. Each one trains a different skill.</p>
+
+    <!-- Day selector -->
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+      <span style="font-size:10px;color:var(--muted);">Word pool:</span>
+      <select id="ex-pool" style="font-size:10px;" onchange="updateExPool()">
+        <option value="all">All 600 words</option>
+        <option value="today">Today's day only</option>
+        <option value="cumul">Cumulative (all days so far)</option>
+      </select>
+      <select id="ex-day-sel" style="font-size:10px;display:none;">
+        <option value="1">Day 1</option>
+      </select>
+    </div>
+
+    <!-- Exercise cards -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+
+      <div class="ex-card" onclick="startExercise('translate_en')">
+        <div class="ex-icon">🌍</div>
+        <div class="ex-title">Translate to English</div>
+        <div class="ex-desc">See Chinese → type the English meaning</div>
+        <div class="ex-badge">Daily</div>
+      </div>
+
+      <div class="ex-card" onclick="startExercise('translate_ch')">
+        <div class="ex-icon">🀄</div>
+        <div class="ex-title">Translate to Chinese</div>
+        <div class="ex-desc">See English → type the Chinese characters</div>
+        <div class="ex-badge">Daily</div>
+      </div>
+
+      <div class="ex-card" onclick="startExercise('complete')">
+        <div class="ex-icon">✏️</div>
+        <div class="ex-title">Complete the Word</div>
+        <div class="ex-desc">Fill in the missing character(s) of the word</div>
+        <div class="ex-badge">Daily</div>
+      </div>
+
+      <div class="ex-card" onclick="startExercise('pinyin_type')">
+        <div class="ex-icon">🎵</div>
+        <div class="ex-title">Type the Pinyin</div>
+        <div class="ex-desc">See the character → type its pinyin with tones</div>
+        <div class="ex-badge">Daily</div>
+      </div>
+
+      <div class="ex-card" onclick="startExercise('match')">
+        <div class="ex-icon">🔗</div>
+        <div class="ex-title">Matching Pairs</div>
+        <div class="ex-desc">Match 8 Chinese words to their English meanings</div>
+        <div class="ex-badge">General</div>
+      </div>
+
+      <div class="ex-card" onclick="startExercise('sort')">
+        <div class="ex-icon">🔤</div>
+        <div class="ex-title">Sort by Tone</div>
+        <div class="ex-desc">Group words by their first tone (1st/2nd/3rd/4th)</div>
+        <div class="ex-badge">General</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Exercise Running Area -->
+  <div id="ex-running" style="display:none;padding:16px;max-width:560px;margin:0 auto;">
+
+    <!-- Header row -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <button onclick="backToExHome()" style="border:1.5px solid var(--border);border-radius:4px;padding:5px 10px;font-family:'Space Mono';font-size:10px;background:transparent;cursor:pointer;">← Back</button>
+      <div id="ex-title-bar" style="font-size:11px;font-weight:bold;color:var(--ink);">Exercise</div>
+      <div id="ex-score-bar" style="font-size:10px;color:var(--muted);">0 / 0</div>
+    </div>
+
+    <div class="quiz-prog-bar"><div class="quiz-prog-fill" id="ex-prog"></div></div>
+    <div id="ex-q-num" style="font-size:9px;color:var(--muted);margin:4px 0 14px;"></div>
+
+    <!-- Prompt area -->
+    <div id="ex-prompt" style="font-family:'Noto Serif SC',serif;font-size:clamp(36px,10vw,60px);color:var(--red);text-align:center;margin-bottom:8px;"></div>
+    <div id="ex-sub" style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:18px;"></div>
+
+    <!-- Type answer input (for translate / pinyin_type) -->
+    <div id="ex-input-area" style="display:none;width:100%;">
+      <input id="ex-input" type="text" placeholder="Type your answer…"
+        style="width:100%;border:2px solid var(--border);border-radius:6px;padding:12px 14px;font-family:'Space Mono';font-size:13px;background:var(--paper);color:var(--ink);outline:none;"
+        onkeydown="if(event.key==='Enter') checkTyped()">
+      <button onclick="checkTyped()" style="width:100%;margin-top:8px;padding:11px;background:var(--ink);color:var(--paper);border:none;border-radius:6px;font-family:'Space Mono';font-size:11px;cursor:pointer;">Check ✓</button>
+    </div>
+
+    <!-- MCQ choices (for complete / sort) -->
+    <div id="ex-choices" style="display:none;">
+      <div id="ex-choices-grid" class="quiz-choices"></div>
+    </div>
+
+    <!-- Matching game -->
+    <div id="ex-match-area" style="display:none;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="ex-match-grid"></div>
+    </div>
+
+    <!-- Sort game -->
+    <div id="ex-sort-area" style="display:none;">
+      <p style="font-size:9px;color:var(--muted);margin-bottom:10px;">Tap each word and assign it to the correct tone bucket:</p>
+      <div id="ex-sort-word" style="font-family:'Noto Serif SC',serif;font-size:40px;color:var(--red);text-align:center;margin-bottom:14px;"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="ex-sort-btns"></div>
+    </div>
+
+    <!-- Feedback -->
+    <div id="ex-feedback" style="min-height:22px;text-align:center;font-size:11px;margin-top:12px;font-weight:bold;"></div>
+
+    <!-- Next button -->
+    <button id="ex-next" onclick="exNext()" style="display:none;width:100%;margin-top:12px;padding:11px;background:var(--ink);color:var(--paper);border:none;border-radius:6px;font-family:'Space Mono';font-size:11px;cursor:pointer;">Next →</button>
+
+  </div>
+
+  <!-- Exercise Result -->
+  <div id="ex-result" style="display:none;padding:24px 16px;max-width:500px;margin:0 auto;text-align:center;">
+    <div id="ex-res-score" style="font-family:'Cormorant Garamond',serif;font-size:72px;color:var(--red);font-weight:700;line-height:1;"></div>
+    <div id="ex-res-label" style="font-size:11px;color:var(--muted);margin-bottom:10px;"></div>
+    <div id="ex-res-grade" style="font-family:'Noto Serif SC',serif;font-size:26px;color:var(--gold);margin-bottom:18px;"></div>
+    <div id="ex-res-missed" style="display:none;" class="result-missed">
+      <h3>Review these 📌</h3>
+      <div id="ex-res-missed-list"></div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="backToExHome()" style="flex:1;padding:11px;border:2px solid var(--ink);border-radius:6px;font-family:'Space Mono';font-size:10px;background:transparent;cursor:pointer;">New Exercise</button>
+      <button onclick="retryExMissed()" style="flex:1;padding:11px;background:var(--red);color:white;border:none;border-radius:6px;font-family:'Space Mono';font-size:10px;cursor:pointer;">Retry Missed</button>
+    </div>
+  </div>
+
 </div>
 
 <!-- ─── PLAN ─── -->
@@ -953,11 +1102,11 @@ let activeDayForQuiz = null;
 
 // ── TABS ──
 function setTab(t){
-  ['cards','quiz','plan','list'].forEach(id=>{
+  ['cards','quiz','exercises','plan','list'].forEach(id=>{
     document.getElementById('tab-'+id).style.display = id===t ? 'block' : 'none';
   });
   document.querySelectorAll('.nav-tab').forEach((el,i)=>{
-    el.classList.toggle('active', ['cards','quiz','plan','list'][i]===t);
+    el.classList.toggle('active', ['cards','quiz','exercises','plan','list'][i]===t);
   });
   if(t==='plan') renderPlan();
   if(t==='list') renderList2();
@@ -1331,8 +1480,381 @@ function retryMissed(){
 }
 
 // ══════════════════════════════════════════
-// PLAN
+// EXERCISES
 // ══════════════════════════════════════════
+let exType='', exWords=[], exIdx=0, exScore=0, exMissed=[];
+let exMatchSelected=null, exMatchPairs=[], exMatchDone=0;
+let exSortWords=[], exSortIdx=0;
+
+function updateExPool(){
+  const v=document.getElementById('ex-pool').value;
+  document.getElementById('ex-day-sel').style.display=(v==='today'||v==='cumul')?'inline-block':'none';
+}
+
+function buildExDaySelect(){
+  const sel=document.getElementById('ex-day-sel');
+  sel.innerHTML='';
+  for(let d=1;d<=DAYS;d++){
+    const o=document.createElement('option');
+    o.value=d; o.textContent=`Day ${d}`;
+    sel.appendChild(o);
+  }
+  sel.value=planData.startDay||1;
+}
+
+function getExPool(){
+  const v=document.getElementById('ex-pool').value;
+  const d=parseInt(document.getElementById('ex-day-sel').value||1);
+  if(v==='today') return getDayWords(d);
+  if(v==='cumul') return getCumWords(d);
+  return [...ALL_WORDS];
+}
+
+function backToExHome(){
+  document.getElementById('ex-home').style.display='block';
+  document.getElementById('ex-running').style.display='none';
+  document.getElementById('ex-result').style.display='none';
+}
+
+function startExercise(type){
+  exType=type; exIdx=0; exScore=0; exMissed=[];
+  const pool=getExPool();
+  exWords=[...pool].sort(()=>Math.random()-.5).slice(0,type==='match'?16:20);
+
+  document.getElementById('ex-home').style.display='none';
+  document.getElementById('ex-result').style.display='none';
+  document.getElementById('ex-running').style.display='block';
+
+  // Reset all areas
+  ['ex-input-area','ex-choices','ex-match-area','ex-sort-area'].forEach(id=>{
+    document.getElementById(id).style.display='none';
+  });
+  document.getElementById('ex-feedback').textContent='';
+  document.getElementById('ex-next').style.display='none';
+  document.getElementById('ex-input').value='';
+
+  const titles={
+    translate_en:'🌍 Translate to English',
+    translate_ch:'🀄 Translate to Chinese',
+    complete:'✏️ Complete the Word',
+    pinyin_type:'🎵 Type the Pinyin',
+    match:'🔗 Matching Pairs',
+    sort:'🔤 Sort by Tone'
+  };
+  document.getElementById('ex-title-bar').textContent=titles[type]||type;
+
+  if(type==='match') renderMatch();
+  else if(type==='sort'){ exSortWords=[...exWords]; exSortIdx=0; renderSort(); }
+  else renderExQuestion();
+}
+
+function renderExQuestion(){
+  if(exIdx>=exWords.length){ showExResult(); return; }
+  const w=exWords[exIdx];
+  const total=exWords.length;
+
+  document.getElementById('ex-prog').style.width=((exIdx/total)*100)+'%';
+  document.getElementById('ex-q-num').textContent=`Question ${exIdx+1} / ${total}`;
+  document.getElementById('ex-score-bar').textContent=`${exScore} / ${exIdx}`;
+  document.getElementById('ex-feedback').textContent='';
+  document.getElementById('ex-next').style.display='none';
+
+  ['ex-input-area','ex-choices','ex-match-area','ex-sort-area'].forEach(id=>{
+    document.getElementById(id).style.display='none';
+  });
+  document.getElementById('ex-input').value='';
+  document.getElementById('ex-input').style.borderColor='var(--border)';
+
+  if(exType==='translate_en'){
+    document.getElementById('ex-prompt').textContent=w.ch;
+    document.getElementById('ex-sub').textContent=w.py+' — what does this mean in English?';
+    document.getElementById('ex-input-area').style.display='block';
+    setTimeout(()=>document.getElementById('ex-input').focus(),100);
+
+  } else if(exType==='translate_ch'){
+    document.getElementById('ex-prompt').style.fontSize='clamp(16px,4vw,22px)';
+    document.getElementById('ex-prompt').style.fontFamily='Space Mono, monospace';
+    document.getElementById('ex-prompt').textContent=w.en;
+    document.getElementById('ex-sub').textContent='Type the Chinese characters:';
+    document.getElementById('ex-input-area').style.display='block';
+    document.getElementById('ex-input').placeholder='Type in Chinese…';
+    setTimeout(()=>document.getElementById('ex-input').focus(),100);
+
+  } else if(exType==='pinyin_type'){
+    document.getElementById('ex-prompt').style.fontSize='clamp(44px,12vw,68px)';
+    document.getElementById('ex-prompt').style.fontFamily="'Noto Serif SC', serif";
+    document.getElementById('ex-prompt').textContent=w.ch;
+    document.getElementById('ex-sub').textContent='Type the pinyin (with tone marks or numbers ok):';
+    document.getElementById('ex-input-area').style.display='block';
+    document.getElementById('ex-input').placeholder='e.g. māma or mama1…';
+    setTimeout(()=>document.getElementById('ex-input').focus(),100);
+
+  } else if(exType==='complete'){
+    // Hide 1 random character with ___
+    const chars=w.ch.split('');
+    const hideIdx=Math.floor(Math.random()*chars.length);
+    const displayed=chars.map((c,i)=>i===hideIdx?'＿':c).join('');
+    document.getElementById('ex-prompt').style.fontSize='clamp(36px,10vw,58px)';
+    document.getElementById('ex-prompt').style.fontFamily="'Noto Serif SC', serif";
+    document.getElementById('ex-prompt').textContent=displayed;
+    document.getElementById('ex-sub').textContent=`${w.py}  —  ${w.en}`;
+
+    // 4 choices: correct hidden char + 3 wrong chars from other words
+    const correct=chars[hideIdx];
+    const wrongChars=[...ALL_WORDS]
+      .flatMap(x=>x.ch.split(''))
+      .filter(c=>c!==correct)
+      .sort(()=>Math.random()-.5)
+      .slice(0,3);
+    const choices=[correct,...wrongChars].sort(()=>Math.random()-.5);
+
+    document.getElementById('ex-choices').style.display='block';
+    const grid=document.getElementById('ex-choices-grid');
+    grid.style.gridTemplateColumns='1fr 1fr';
+    grid.innerHTML='';
+    choices.forEach(ch=>{
+      const btn=document.createElement('button');
+      btn.className='quiz-choice';
+      btn.style.fontSize='26px';
+      btn.style.fontFamily="'Noto Serif SC', serif";
+      btn.textContent=ch;
+      btn.onclick=()=>checkComplete(btn, ch, correct, w);
+      grid.appendChild(btn);
+    });
+  }
+}
+
+function checkTyped(){
+  const input=document.getElementById('ex-input');
+  const val=input.value.trim();
+  if(!val) return;
+  const w=exWords[exIdx];
+  let correct=false;
+
+  if(exType==='translate_en'){
+    // Accept if answer contains key words from correct answer
+    const ans=w.en.toLowerCase();
+    const userAns=val.toLowerCase();
+    // Check if at least one significant word matches
+    const ansWords=ans.replace(/[\/\(\)]/g,' ').split(' ').filter(x=>x.length>2);
+    correct=ansWords.some(aw=>userAns.includes(aw)) || ans.includes(userAns) || userAns.includes(ans.split('/')[0].trim());
+
+  } else if(exType==='translate_ch'){
+    correct=val===w.ch || w.ch.includes(val);
+
+  } else if(exType==='pinyin_type'){
+    // Accept both tone marks and tone numbers
+    const stripToneNums = s => s.toLowerCase()
+      .replace(/([aeiouüv])([1-4])/g,(m,v,t)=>{
+        const map={'a':['ā','á','ǎ','à'],'e':['ē','é','ě','è'],'i':['ī','í','ǐ','ì'],
+                   'o':['ō','ó','ǒ','ò'],'u':['ū','ú','ǔ','ù'],'ü':['ǖ','ǘ','ǚ','ǜ'],'v':['ǖ','ǘ','ǚ','ǜ']};
+        return (map[v]||[v,v,v,v])[parseInt(t)-1]||v;
+      });
+    const userNorm=stripToneNums(val);
+    const correctNorm=w.py.toLowerCase();
+    correct=userNorm===correctNorm || val.toLowerCase()===correctNorm;
+  }
+
+  input.style.borderColor=correct?'var(--green)':'var(--red)';
+  const fb=document.getElementById('ex-feedback');
+  if(correct){
+    exScore++;
+    fb.textContent='✓ Correct! 🎉';
+    fb.style.color='var(--green)';
+  } else {
+    if(!exMissed.find(m=>m.ch===w.ch)) exMissed.push(w);
+    fb.textContent=`✗  Correct answer: ${exType==='translate_en'?w.en:exType==='translate_ch'?w.ch:w.py}`;
+    fb.style.color='var(--red)';
+  }
+  document.getElementById('ex-next').style.display='block';
+  document.getElementById('ex-next').onclick=()=>{ exIdx++; renderExQuestion(); };
+}
+
+function checkComplete(btn, chosen, correct, w){
+  document.querySelectorAll('#ex-choices-grid .quiz-choice').forEach(b=>{
+    b.classList.add('locked');
+    if(b.textContent===correct) b.classList.add('correct');
+  });
+  const isCorrect=chosen===correct;
+  btn.classList.add(isCorrect?'correct':'wrong');
+  const fb=document.getElementById('ex-feedback');
+  if(isCorrect){
+    exScore++;
+    fb.textContent='✓ Correct!';
+    fb.style.color='var(--green)';
+  } else {
+    if(!exMissed.find(m=>m.ch===w.ch)) exMissed.push(w);
+    fb.textContent=`✗ The missing character was: ${correct}`;
+    fb.style.color='var(--red)';
+  }
+  document.getElementById('ex-next').style.display='block';
+  document.getElementById('ex-next').onclick=()=>{ exIdx++; renderExQuestion(); };
+}
+
+// ── MATCHING PAIRS ──
+function renderMatch(){
+  document.getElementById('ex-q-num').textContent='Match all 8 pairs!';
+  document.getElementById('ex-score-bar').textContent='';
+  document.getElementById('ex-prompt').textContent='';
+  document.getElementById('ex-sub').textContent='Tap a Chinese word, then tap its English meaning.';
+  document.getElementById('ex-match-area').style.display='block';
+
+  const pairs=exWords.slice(0,8);
+  exMatchPairs=pairs; exMatchSelected=null; exMatchDone=0;
+
+  const chBtns=pairs.map(w=>({type:'ch',word:w,text:w.ch}));
+  const enBtns=pairs.map(w=>({type:'en',word:w,text:w.en.split('/')[0].trim()}));
+
+  // Interleave: left col = chinese, right col = english (shuffled independently)
+  const chShuffled=[...chBtns].sort(()=>Math.random()-.5);
+  const enShuffled=[...enBtns].sort(()=>Math.random()-.5);
+
+  const grid=document.getElementById('ex-match-grid');
+  grid.innerHTML='';
+
+  for(let i=0;i<8;i++){
+    [chShuffled[i], enShuffled[i]].forEach(item=>{
+      const btn=document.createElement('button');
+      btn.className='match-btn';
+      btn.dataset.type=item.type;
+      btn.dataset.ch=item.word.ch;
+      btn.textContent=item.text;
+      if(item.type==='ch'){
+        btn.style.fontFamily="'Noto Serif SC',serif";
+        btn.style.fontSize='18px';
+      } else {
+        btn.style.fontSize='9px';
+        btn.style.lineHeight='1.4';
+      }
+      btn.onclick=()=>handleMatch(btn, item);
+      grid.appendChild(btn);
+    });
+  }
+}
+
+function handleMatch(btn, item){
+  if(btn.classList.contains('matched')||btn.classList.contains('locked')) return;
+
+  if(!exMatchSelected){
+    // First selection
+    document.querySelectorAll('.match-btn.selected').forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+    exMatchSelected={btn,item};
+  } else {
+    const prev=exMatchSelected;
+    // Must select one ch and one en
+    if(prev.item.type===item.type){
+      // Same type — switch selection
+      prev.btn.classList.remove('selected');
+      btn.classList.add('selected');
+      exMatchSelected={btn,item};
+      return;
+    }
+    // Check if they match
+    const isMatch=prev.item.word.ch===item.word.ch;
+    if(isMatch){
+      btn.classList.add('matched'); prev.btn.classList.add('matched');
+      exMatchDone++;
+      exScore++;
+      document.getElementById('ex-feedback').textContent=`✓ Match! ${exMatchDone}/8`;
+      document.getElementById('ex-feedback').style.color='var(--green)';
+      if(exMatchDone>=8){
+        setTimeout(()=>showExResult(),600);
+      }
+    } else {
+      btn.classList.add('wrong-match'); prev.btn.classList.add('wrong-match');
+      const w=prev.item.type==='ch'?prev.item.word:item.item?.word||item.word;
+      if(!exMissed.find(m=>m.ch===prev.item.word.ch)) exMissed.push(prev.item.word);
+      document.getElementById('ex-feedback').textContent='✗ Not a match — try again!';
+      document.getElementById('ex-feedback').style.color='var(--red)';
+      setTimeout(()=>{
+        btn.classList.remove('wrong-match','selected');
+        prev.btn.classList.remove('wrong-match','selected');
+      }, 700);
+    }
+    exMatchSelected=null;
+  }
+}
+
+// ── SORT BY TONE ──
+function renderSort(){
+  if(exSortIdx>=exSortWords.length){ showExResult(); return; }
+  const w=exSortWords[exSortIdx];
+  document.getElementById('ex-prog').style.width=((exSortIdx/exSortWords.length)*100)+'%';
+  document.getElementById('ex-q-num').textContent=`Word ${exSortIdx+1} / ${exSortWords.length}`;
+  document.getElementById('ex-score-bar').textContent=`${exScore} / ${exSortIdx}`;
+  document.getElementById('ex-feedback').textContent='';
+  document.getElementById('ex-next').style.display='none';
+  document.getElementById('ex-sort-area').style.display='block';
+  document.getElementById('ex-prompt').textContent='';
+  document.getElementById('ex-sub').textContent='What tone is the FIRST syllable?';
+
+  document.getElementById('ex-sort-word').textContent=w.ch;
+
+  // Detect correct tone from first syllable
+  const firstSyl=w.py.split(' ')[0];
+  let correctTone='neutral';
+  if(/[āēīōūǖ]/.test(firstSyl)) correctTone='1st (—)';
+  else if(/[áéíóúǘ]/.test(firstSyl)) correctTone='2nd (/)';
+  else if(/[ǎěǐǒǔǚ]/.test(firstSyl)) correctTone='3rd (∨)';
+  else if(/[àèìòùǜ]/.test(firstSyl)) correctTone='4th (\\)';
+
+  const tones=['1st (—)','2nd (/)','3rd (∨)','4th (\\)','neutral'];
+  const btns=document.getElementById('ex-sort-btns');
+  btns.innerHTML='';
+  tones.forEach(t=>{
+    const btn=document.createElement('button');
+    btn.className='quiz-choice';
+    btn.style.fontSize='11px';
+    btn.textContent=t;
+    btn.onclick=()=>{
+      document.querySelectorAll('#ex-sort-btns .quiz-choice').forEach(b=>b.classList.add('locked'));
+      const isCorrect=t===correctTone;
+      btn.classList.add(isCorrect?'correct':'wrong');
+      document.querySelectorAll('#ex-sort-btns .quiz-choice').forEach(b=>{
+        if(b.textContent===correctTone) b.classList.add('correct');
+      });
+      const fb=document.getElementById('ex-feedback');
+      if(isCorrect){ exScore++; fb.textContent=`✓ Correct! ${w.py}`; fb.style.color='var(--green)'; }
+      else { if(!exMissed.find(m=>m.ch===w.ch)) exMissed.push(w); fb.textContent=`✗ Answer: ${correctTone} — ${w.py}`; fb.style.color='var(--red)'; }
+      document.getElementById('ex-next').style.display='block';
+      document.getElementById('ex-next').onclick=()=>{ exSortIdx++; renderSort(); };
+    };
+    btns.appendChild(btn);
+  });
+}
+
+function exNext(){ /* handled inline */ }
+
+function showExResult(){
+  document.getElementById('ex-running').style.display='none';
+  document.getElementById('ex-result').style.display='block';
+  const total=exType==='match'?exMatchPairs.length:exType==='sort'?exSortWords.length:exWords.length;
+  document.getElementById('ex-res-score').textContent=exScore;
+  document.getElementById('ex-res-label').textContent=`out of ${total}`;
+  const pct=Math.round(exScore/total*100);
+  let grade='优秀 ✨'; if(pct<60) grade='继续加油 💪'; else if(pct<80) grade='很好 👍';
+  document.getElementById('ex-res-grade').textContent=grade+` (${pct}%)`;
+  const mb=document.getElementById('ex-res-missed');
+  const ml=document.getElementById('ex-res-missed-list');
+  ml.innerHTML='';
+  if(exMissed.length){
+    mb.style.display='block';
+    exMissed.forEach(w=>{ ml.innerHTML+=`<div class="missed-item"><span class="mi-ch">${w.ch}</span><span class="mi-py">${w.py}</span><span class="mi-en">${w.en}</span></div>`; });
+  } else mb.style.display='none';
+}
+
+function retryExMissed(){
+  if(!exMissed.length){ backToExHome(); return; }
+  exWords=[...exMissed]; exMissed=[]; exIdx=0; exScore=0;
+  document.getElementById('ex-result').style.display='none';
+  document.getElementById('ex-running').style.display='block';
+  document.getElementById('ex-feedback').textContent='';
+  document.getElementById('ex-next').style.display='none';
+  if(exType==='match') renderMatch();
+  else if(exType==='sort'){ exSortWords=[...exWords]; exSortIdx=0; renderSort(); }
+  else renderExQuestion();
+}
 function renderPlan(){
   const grid=document.getElementById('plan-grid');
   grid.innerHTML='';
@@ -1433,6 +1955,7 @@ function renderList2(){ doSearch2(); }
 // INIT
 // ══════════════════════════════════════════
 buildDaySelect();
+buildExDaySelect();
 applyFilter();
 updateDayBadge();
 </script>
