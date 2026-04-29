@@ -258,15 +258,11 @@ select{border:1.5px solid var(--border);border-radius:4px;padding:7px 8px;font-f
 
     <!-- Setup -->
     <div class="quiz-setup" id="quiz-setup">
-      <h2>Party Test 🎉</h2>
-      <p style="font-size:10px;color:var(--muted);margin-bottom:14px;">Choose your options and start!</p>
-
-      <p style="font-size:10px;margin-bottom:6px;color:var(--ink);">Question type:</p>
-      <div class="quiz-option-row">
-        <button class="quiz-opt sel" data-group="qtype" data-val="ch2en" onclick="selOpt(this)">Chinese → English</button>
-        <button class="quiz-opt" data-group="qtype" data-val="en2ch" onclick="selOpt(this)">English → Chinese</button>
-        <button class="quiz-opt" data-group="qtype" data-val="mix" onclick="selOpt(this)">Mixed</button>
-      </div>
+      <h2>Two-Step Quiz 🎯</h2>
+      <p style="font-size:10px;color:var(--muted);margin-bottom:14px;">
+        Step 1: See the character → find the correct pinyin (with tone traps!)<br>
+        Step 2: If correct → find the English meaning
+      </p>
 
       <p style="font-size:10px;margin-bottom:6px;color:var(--ink);">Word pool:</p>
       <div class="quiz-option-row" id="quiz-pool-opts">
@@ -297,9 +293,15 @@ select{border:1.5px solid var(--border);border-radius:4px;padding:7px 8px;font-f
 
     <!-- Running -->
     <div class="quiz-running" id="quiz-running">
+      <!-- Step indicator -->
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px;width:100%;max-width:500px;">
+        <div id="step-badge-1" style="padding:3px 10px;border-radius:20px;font-size:9px;background:var(--ink);color:var(--paper);transition:all .3s;">STEP 1 · PINYIN</div>
+        <div style="flex:1;height:1px;background:var(--border);"></div>
+        <div id="step-badge-2" style="padding:3px 10px;border-radius:20px;font-size:9px;background:var(--border);color:var(--muted);transition:all .3s;">STEP 2 · MEANING</div>
+      </div>
       <div class="quiz-q-num" id="qq-num">Question 1 / 10</div>
       <div class="quiz-prog-bar"><div class="quiz-prog-fill" id="qq-prog"></div></div>
-      <div class="quiz-prompt" id="qq-prompt"></div>
+      <div class="quiz-prompt" id="qq-prompt" style="font-family:'Noto Serif SC',serif;"></div>
       <div class="quiz-subprompt" id="qq-sub"></div>
       <div class="quiz-choices" id="qq-choices"></div>
       <div class="quiz-feedback" id="qq-feedback"></div>
@@ -947,8 +949,6 @@ let deck = [...ALL_WORDS];
 let cardIdx = 0;
 let cardViewMode = 'card'; // 'card' | 'list'
 
-// Quiz state
-let qWords = [], qIdx = 0, qCorrect = 0, qMissed = [], qOpts = {}, qLocked = false;
 let activeDayForQuiz = null;
 
 // ── TABS ──
@@ -1055,15 +1055,19 @@ document.addEventListener('keydown',e=>{
 });
 
 // ══════════════════════════════════════════
-// QUIZ
+// QUIZ — TWO-STEP: character → pinyin → meaning
 // ══════════════════════════════════════════
+
+// Quiz state
+let qWords=[], qIdx=0, qCorrect=0, qMissed=[], qLocked=false;
+let qStep=1; // 1=pinyin step, 2=meaning step
+let qPassedStep1=false; // did user get pinyin right?
+
 function selOpt(btn){
   const g=btn.dataset.group;
   document.querySelectorAll(`[data-group="${g}"]`).forEach(b=>b.classList.remove('sel'));
   btn.classList.add('sel');
-  if(g==='pool'){
-    document.getElementById('day-picker').style.display = btn.dataset.val==='plan' ? 'block' : 'none';
-  }
+  if(g==='pool') document.getElementById('day-picker').style.display=btn.dataset.val==='plan'?'block':'none';
 }
 
 function buildDaySelect(){
@@ -1084,90 +1088,212 @@ function getQuizPool(){
   if(pool==='plan'){
     const d=parseInt(document.getElementById('quiz-day-select').value);
     const cumul=document.getElementById('cumul-check').checked;
-    return cumul ? getCumWords(d) : getDayWords(d);
+    return cumul?getCumWords(d):getDayWords(d);
   }
   return [...ALL_WORDS];
 }
 
 function startQuiz(pool, forcedCount){
-  const words = pool || getQuizPool();
-  if(!words.length){ alert('No words in pool!'); return; }
-  const countSel = forcedCount || document.querySelector('[data-group="qcount"].sel').dataset.val;
-  let count = countSel==='all' ? words.length : Math.min(parseInt(countSel), words.length);
-  // shuffle
-  const shuffled=[...words].sort(()=>Math.random()-.5);
-  qWords = shuffled.slice(0, count);
+  const words=pool||getQuizPool();
+  if(!words.length){alert('No words in pool!');return;}
+  const countSel=forcedCount||document.querySelector('[data-group="qcount"].sel').dataset.val;
+  let count=countSel==='all'?words.length:Math.min(parseInt(countSel),words.length);
+  qWords=[...words].sort(()=>Math.random()-.5).slice(0,count);
   qIdx=0; qCorrect=0; qMissed=[];
   document.getElementById('quiz-setup').style.display='none';
   document.getElementById('quiz-result').classList.remove('active');
   document.getElementById('quiz-running').classList.add('active');
-  renderQuestion();
+  renderStep1();
 }
 
-function getQType(){
-  const t=document.querySelector('[data-group="qtype"].sel');
-  if(!t) return 'ch2en';
-  if(t.dataset.val==='mix') return Math.random()<.5?'ch2en':'en2ch';
-  return t.dataset.val;
-}
+// ── Pinyin choice generator ──
+// Single character → tone traps (shì / shí / shǐ / shī)
+// Multi-character word → 3 completely different words' pinyin
+function getPinyinChoices(word, allWords){
+  const correctPy = word.py;
+  const isSingle = word.ch.length === 1;
 
-function renderQuestion(){
-  if(qIdx>=qWords.length){ showResult(); return; }
-  const w=qWords[qIdx];
-  const type=getQType();
-  qLocked=false;
-  document.getElementById('qq-num').textContent=`Question ${qIdx+1} / ${qWords.length}`;
-  document.getElementById('qq-prog').style.width=((qIdx/qWords.length)*100)+'%';
-  if(type==='ch2en'){
-    document.getElementById('qq-prompt').textContent=w.ch;
-    document.getElementById('qq-sub').textContent=w.py+' — choose the meaning';
+  if(isSingle){
+    const toneMap={'a':['ā','á','ǎ','à'],'e':['ē','é','ě','è'],'i':['ī','í','ǐ','ì'],
+                   'o':['ō','ó','ǒ','ò'],'u':['ū','ú','ǔ','ù'],'ü':['ǖ','ǘ','ǚ','ǜ']};
+    const stripTones = s => s.replace(/[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/g, m=>{
+      const map={'ā':'a','á':'a','ǎ':'a','à':'a','ē':'e','é':'e','ě':'e','è':'e',
+                 'ī':'i','í':'i','ǐ':'i','ì':'i','ō':'o','ó':'o','ǒ':'o','ò':'o',
+                 'ū':'u','ú':'u','ǔ':'u','ù':'u','ǖ':'ü','ǘ':'ü','ǚ':'ü','ǜ':'ü'};
+      return map[m]||m;
+    });
+    const base = stripTones(correctPy);
+    const traps=[];
+    for(const v of ['a','e','i','o','u','ü']){
+      if(base.includes(v) && toneMap[v]){
+        for(const tv of toneMap[v]){
+          const c = base.replace(v,tv);
+          if(c !== correctPy && !traps.includes(c)) traps.push(c);
+        }
+        break;
+      }
+    }
+    traps.sort(()=>Math.random()-.5);
+    const result = traps.slice(0,2);
+    const extras = allWords
+      .filter(w=>w.py!==correctPy && !result.includes(w.py))
+      .sort(()=>Math.random()-.5).map(w=>w.py);
+    for(const p of extras){ if(result.length>=3) break; result.push(p); }
+    return result.slice(0,3);
+
   } else {
-    document.getElementById('qq-prompt').textContent=w.en;
-    document.getElementById('qq-sub').textContent='Choose the Chinese character';
+    // Multi-character: use 3 completely different words as distractors
+    return allWords
+      .filter(w=>w.ch!==word.ch && w.py!==correctPy)
+      .sort(()=>Math.random()-.5)
+      .slice(0,3)
+      .map(w=>w.py);
   }
-  // Build choices: 1 correct + 3 random wrong
-  let wrong=[...ALL_WORDS].filter(x=>x.ch!==w.ch||x.en!==w.en).sort(()=>Math.random()-.5).slice(0,3);
-  let choices=[w,...wrong].sort(()=>Math.random()-.5);
-  const box=document.getElementById('qq-choices');
-  box.innerHTML='';
+}
+
+// ── STEP 1: Show character, pick pinyin ──
+function renderStep1(){
+  if(qIdx>=qWords.length){showResult();return;}
+  const w=qWords[qIdx];
+  qStep=1; qLocked=false; qPassedStep1=false;
+  const isSingle = w.ch.length === 1;
+
+  document.getElementById('step-badge-1').style.background='var(--ink)';
+  document.getElementById('step-badge-1').style.color='var(--paper)';
+  document.getElementById('step-badge-2').style.background='var(--border)';
+  document.getElementById('step-badge-2').style.color='var(--muted)';
+
+  document.getElementById('qq-num').textContent=`Word ${qIdx+1} / ${qWords.length}`;
+  document.getElementById('qq-prog').style.width=((qIdx/qWords.length)*100)+'%';
+  document.getElementById('qq-prompt').textContent=w.ch;
+  document.getElementById('qq-prompt').style.fontSize='clamp(52px,15vw,80px)';
+  document.getElementById('qq-sub').textContent= isSingle
+    ? 'Which pinyin is correct? Watch the tones carefully! 🎵'
+    : 'Which pinyin matches this word?';
   document.getElementById('qq-feedback').textContent='';
   document.getElementById('qq-next').style.display='none';
-  choices.forEach(c=>{
+
+  // Get 3 wrong pinyin choices
+  const wrongPy = getPinyinChoices(w, ALL_WORDS);
+  const choices = [w.py, ...wrongPy].sort(()=>Math.random()-.5);
+
+  const box=document.getElementById('qq-choices');
+  box.innerHTML='';
+  box.style.gridTemplateColumns='1fr 1fr';
+
+  choices.forEach(py=>{
     const btn=document.createElement('button');
     btn.className='quiz-choice';
-    btn.textContent = type==='ch2en' ? c.en : c.ch+(c.py?'\n'+c.py:'');
-    btn.style.whiteSpace='pre-line';
-    btn.onclick=()=>handleAnswer(btn, c, w, type);
+    btn.style.fontSize='14px';
+    btn.style.letterSpacing='1px';
+    btn.textContent=py;
+    btn.onclick=()=>handleStep1(btn, py, w);
     box.appendChild(btn);
   });
 }
 
-function handleAnswer(btn, chosen, correct, type){
+function handleStep1(btn, chosenPy, word){
   if(qLocked) return;
   qLocked=true;
-  const isCorrect = chosen.ch===correct.ch && chosen.en===correct.en;
-  btn.classList.add(isCorrect?'correct':'wrong');
+  const correct=chosenPy===word.py;
+  btn.classList.add(correct?'correct':'wrong');
   btn.classList.add('locked');
-  // highlight correct
+  // highlight correct answer
   document.querySelectorAll('.quiz-choice').forEach(b=>{
-    const txt=b.textContent;
-    const isC = type==='ch2en' ? txt===correct.en : txt.startsWith(correct.ch);
-    if(isC) b.classList.add('correct');
+    if(b.textContent===word.py) b.classList.add('correct');
     b.classList.add('locked');
   });
-  if(isCorrect){ qCorrect++; document.getElementById('qq-feedback').textContent='✓ Correct!'; }
-  else { qMissed.push(correct); document.getElementById('qq-feedback').textContent=`✗ Answer: ${type==='ch2en'?correct.en:correct.ch} (${correct.py})`; }
+
+  if(correct){
+    qPassedStep1=true;
+    document.getElementById('qq-feedback').textContent='✓ Correct pinyin! Now find the meaning →';
+    document.getElementById('qq-feedback').style.color='var(--green)';
+    // Auto-advance to step 2 after short pause
+    setTimeout(()=>renderStep2(word), 900);
+  } else {
+    qPassedStep1=false;
+    qMissed.push(word);
+    document.getElementById('qq-feedback').textContent=`✗ The correct pinyin is: ${word.py}`;
+    document.getElementById('qq-feedback').style.color='var(--red)';
+    document.getElementById('qq-next').textContent='Skip to next →';
+    document.getElementById('qq-next').style.display='inline-block';
+  }
+}
+
+// ── STEP 2: Pinyin confirmed, now pick English meaning ──
+function renderStep2(word){
+  qStep=2; qLocked=false;
+
+  // Update step badges
+  document.getElementById('step-badge-1').style.background='var(--green)';
+  document.getElementById('step-badge-1').style.color='white';
+  document.getElementById('step-badge-2').style.background='var(--ink)';
+  document.getElementById('step-badge-2').style.color='var(--paper)';
+
+  document.getElementById('qq-prompt').textContent=word.ch;
+  document.getElementById('qq-prompt').style.fontSize='clamp(40px,12vw,64px)';
+  // Show pinyin as hint below character
+  document.getElementById('qq-sub').innerHTML=
+    `<span style="color:var(--green);font-weight:bold">${word.py}</span> — now choose the meaning!`;
+  document.getElementById('qq-feedback').textContent='';
+  document.getElementById('qq-next').style.display='none';
+
+  // 4 English choices: 1 correct + 3 wrong
+  const wrong=[...ALL_WORDS]
+    .filter(x=>x.ch!==word.ch||x.en!==word.en)
+    .sort(()=>Math.random()-.5)
+    .slice(0,3);
+  const choices=[word,...wrong].sort(()=>Math.random()-.5);
+
+  const box=document.getElementById('qq-choices');
+  box.innerHTML='';
+  box.style.gridTemplateColumns='1fr 1fr';
+
+  choices.forEach(c=>{
+    const btn=document.createElement('button');
+    btn.className='quiz-choice';
+    btn.style.fontSize='11px';
+    btn.style.textAlign='center';
+    btn.textContent=c.en;
+    btn.onclick=()=>handleStep2(btn, c, word);
+    box.appendChild(btn);
+  });
+}
+
+function handleStep2(btn, chosen, correct){
+  if(qLocked) return;
+  qLocked=true;
+  const isCorrect=chosen.ch===correct.ch&&chosen.en===correct.en;
+  btn.classList.add(isCorrect?'correct':'wrong');
+  btn.classList.add('locked');
+  document.querySelectorAll('.quiz-choice').forEach(b=>{
+    if(b.textContent===correct.en) b.classList.add('correct');
+    b.classList.add('locked');
+  });
+  if(isCorrect){
+    qCorrect++;
+    document.getElementById('qq-feedback').textContent='✓ Perfect! Both steps correct 🎉';
+    document.getElementById('qq-feedback').style.color='var(--green)';
+  } else {
+    if(!qMissed.find(m=>m.ch===correct.ch&&m.en===correct.en)) qMissed.push(correct);
+    document.getElementById('qq-feedback').textContent=`✗ Meaning: ${correct.en}`;
+    document.getElementById('qq-feedback').style.color='var(--red)';
+  }
+  document.getElementById('qq-next').textContent='Next →';
   document.getElementById('qq-next').style.display='inline-block';
 }
 
-function nextQuestion(){ qIdx++; renderQuestion(); }
+function nextQuestion(){
+  qIdx++;
+  renderStep1();
+}
 
 function showResult(){
   document.getElementById('quiz-running').classList.remove('active');
   const res=document.getElementById('quiz-result');
   res.classList.add('active');
   document.getElementById('res-score').textContent=qCorrect;
-  document.getElementById('res-label').textContent=`out of ${qWords.length}`;
+  document.getElementById('res-label').textContent=`out of ${qWords.length} (both steps)`;
   const pct=Math.round(qCorrect/qWords.length*100);
   let grade='优秀 ✨'; if(pct<60) grade='继续加油 💪'; else if(pct<80) grade='很好 👍';
   document.getElementById('res-grade').textContent=grade+` (${pct}%)`;
@@ -1176,14 +1302,18 @@ function showResult(){
   ml.innerHTML='';
   if(qMissed.length){
     missedBox.style.display='block';
-    qMissed.forEach(w=>{ ml.innerHTML+=`<div class="missed-item"><span class="mi-ch">${w.ch}</span><span class="mi-py">${w.py}</span><span class="mi-en">${w.en}</span></div>`; });
+    qMissed.forEach(w=>{
+      ml.innerHTML+=`<div class="missed-item">
+        <span class="mi-ch">${w.ch}</span>
+        <span class="mi-py">${w.py}</span>
+        <span class="mi-en">${w.en}</span>
+      </div>`;
+    });
   } else { missedBox.style.display='none'; }
-  // save score if this was a plan day test
   if(activeDayForQuiz!==null){
     planData.scores[activeDayForQuiz]={score:qCorrect,total:qWords.length,pct};
     planData.done[activeDayForQuiz]=true;
-    savePlan();
-    activeDayForQuiz=null;
+    savePlan(); activeDayForQuiz=null;
   }
   updateDayBadge();
 }
@@ -1196,8 +1326,8 @@ function showQuizSetup(){
 }
 
 function retryMissed(){
-  if(!qMissed.length){ showQuizSetup(); return; }
-  startQuiz(qMissed, qMissed.length);
+  if(!qMissed.length){showQuizSetup();return;}
+  startQuiz([...qMissed], qMissed.length);
 }
 
 // ══════════════════════════════════════════
@@ -1252,7 +1382,7 @@ function startDayQuiz(){
   const d=parseInt(document.getElementById('day-modal').dataset.day);
   closeDayModal();
   activeDayForQuiz=d;
-  const pool=getCumWords(d); // cumulative!
+  const pool=getCumWords(d);
   setTab('quiz');
   document.getElementById('quiz-setup').style.display='none';
   document.getElementById('quiz-result').classList.remove('active');
