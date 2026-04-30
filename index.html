@@ -448,6 +448,7 @@ select{border:1.5px solid var(--border);border-radius:4px;padding:7px 8px;font-f
         <div class="ex-badge" style="background:#fcecea;color:var(--red);border-color:var(--red);">Cumulative · No Pinyin</div>
       </div>
   </div>
+  </div><!-- /ex-home -->
 
   <!-- Exercise Running Area -->
   <div id="ex-running" style="display:none;padding:16px;max-width:560px;margin:0 auto;">
@@ -573,7 +574,7 @@ select{border:1.5px solid var(--border);border-radius:4px;padding:7px 8px;font-f
     <div class="plan-header">
       <div>
         <h2>24-Day Study Plan</h2>
-        <p>25 new words per day → 600 words in 24 days. Each day test covers that day + all previous.</p>
+        <p>25 new words per day → 600 words in 24 days. Each day includes a quiz + sentence exercise.</p>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
         <button class="btn-sm" onclick="setStartDay()">Set Today's Day</button>
@@ -592,9 +593,9 @@ select{border:1.5px solid var(--border);border-radius:4px;padding:7px 8px;font-f
 <!-- ─── LIST ─── -->
 <div id="tab-list" style="display:none">
   <div class="controls">
-    <input class="search-box" type="text" id="search2" placeholder="Search…" oninput="doSearch2()">
+    <input class="search-box" type="text" id="search2" placeholder="Search 汉字, pinyin, English…" oninput="doSearch2()">
     <select id="cat-filter2" onchange="doSearch2()">
-      <option value="all">All</option>
+      <option value="all">All categories</option>
       <option value="noun">Nouns</option>
       <option value="verb">Verbs</option>
       <option value="adjective">Adjectives</option>
@@ -603,10 +604,30 @@ select{border:1.5px solid var(--border);border-radius:4px;padding:7px 8px;font-f
       <option value="preposition">Prepositions</option>
       <option value="measure">Measure Words</option>
     </select>
+    <select id="list-day-filter" onchange="doSearch2()">
+      <option value="0">All days</option>
+    </select>
   </div>
-  <div style="padding:12px 16px;">
+
+  <!-- Sub-tabs: Words / Sentences -->
+  <div style="display:flex;border-bottom:1.5px solid var(--border);background:var(--soft);">
+    <button id="list-tab-words" onclick="setListSubTab('words')"
+      style="flex:1;padding:9px;font-family:'Space Mono';font-size:10px;border:none;background:var(--ink);color:var(--paper);cursor:pointer;">📋 Words</button>
+    <button id="list-tab-sents" onclick="setListSubTab('sents')"
+      style="flex:1;padding:9px;font-family:'Space Mono';font-size:10px;border:none;background:transparent;color:var(--muted);cursor:pointer;">📖 Sentences</button>
+  </div>
+
+  <!-- Words view -->
+  <div id="list-words-view" style="padding:12px 16px;">
     <div class="list-grid" id="list-grid2"></div>
     <div class="no-results" id="no-results2" style="display:none">No words match.</div>
+  </div>
+
+  <!-- Sentences view -->
+  <div id="list-sents-view" style="display:none;padding:12px 16px;max-width:780px;margin:0 auto;">
+    <p style="font-size:10px;color:var(--muted);margin-bottom:12px;">All sentences for the selected day range. Use the day filter above to narrow down.</p>
+    <div id="list-sents-grid"></div>
+    <div id="list-sents-empty" style="display:none;text-align:center;padding:30px;font-size:11px;color:var(--muted);">No sentences for this filter.</div>
   </div>
 </div>
 
@@ -619,6 +640,7 @@ select{border:1.5px solid var(--border);border-radius:4px;padding:7px 8px;font-f
     <div class="modal-footer">
       <button class="modal-btn" onclick="closeDayModal()">Close</button>
       <button class="modal-btn" onclick="studyDayCards()" style="border-color:var(--gold);color:var(--gold);">Study Cards</button>
+      <button class="modal-btn" onclick="startDaySentence()" style="border-color:var(--red);color:var(--red);">Sentences 📖</button>
       <button class="modal-btn red" onclick="startDayQuiz()">Take Test →</button>
     </div>
   </div>
@@ -1201,7 +1223,20 @@ function setTab(t){
     el.classList.toggle('active', ['cards','quiz','exercises','plan','list'][i]===t);
   });
   if(t==='plan') renderPlan();
-  if(t==='list') renderList2();
+  if(t==='list'){ buildListDayFilter(); renderList2(); }
+  if(t==='exercises'){
+    // Make sure home is visible when switching to exercises fresh
+    const home=document.getElementById('ex-home');
+    const running=document.getElementById('ex-running');
+    const result=document.getElementById('ex-result');
+    const sentA=document.getElementById('sent-area');
+    const sentR=document.getElementById('sent-result');
+    // Only show home if nothing else is active
+    if(running&&running.style.display==='none'&&result&&result.style.display==='none'
+       &&sentA&&sentA.style.display==='none'&&sentR&&sentR.style.display==='none'){
+      if(home) home.style.display='block';
+    }
+  }
 }
 
 // ══════════════════════════════════════════
@@ -2566,11 +2601,15 @@ function renderPlan(){
                       isToday?`<span class="pd-badge today-badge">← Today</span>`:
                       `<span class="pd-badge">Day ${d}</span>`;
     const start=(d-1)*25+1, end=Math.min(d*25, ALL_WORDS.length);
+    const sentCount = Object.values(SENTENCES).slice(0,d).reduce((a,v)=>a+v.length,0);
     el.innerHTML=`
       <div class="pd-top"><span class="pd-num">DAY ${d}</span>${badge}</div>
-      <div class="pd-words">Words ${start}–${end} · cumul. test: ${end} words</div>
+      <div class="pd-words">Words ${start}–${end} · ${sentCount} sentences cumulative</div>
       <div class="pd-preview">${words.slice(0,5).map(w=>`<span class="pd-word">${w.ch}</span>`).join('')}<span style="font-size:11px;color:var(--muted)">…</span></div>
-      <button class="pd-test-btn" onclick="openDayModal(${d})">View words &amp; Test →</button>`;
+      <div style="display:flex;gap:4px;margin-top:6px;">
+        <button class="pd-test-btn" style="flex:1;" onclick="openDayModal(${d})">View &amp; Test →</button>
+        <button class="pd-test-btn" style="flex:1;border-color:var(--red);color:var(--red);" onclick="quickStartSentence(${d})">Sentences 📖</button>
+      </div>`;
     grid.appendChild(el);
   }
 }
@@ -2607,6 +2646,17 @@ function startDayQuiz(){
   startQuiz(pool, Math.min(pool.length, 25));
 }
 
+function quickStartSentence(d){
+  setTab('exercises');
+  document.getElementById('ex-home').style.display='none';
+  document.getElementById('sent-result').style.display='none';
+  document.getElementById('sent-area').style.display='block';
+  buildSentDaySelect();
+  document.getElementById('sent-day-sel').value=d;
+  loadSentenceDay();
+  sentIdx=0; sentScore=0; sentMissed=[]; sentLocked=false;
+  renderSentQuestion();
+}
 function setStartDay(){
   const d=parseInt(prompt('Enter today\'s day number (1–'+DAYS+'):','1'));
   if(isNaN(d)||d<1||d>DAYS) return;
@@ -2624,27 +2674,121 @@ function updateDayBadge(){
 // ══════════════════════════════════════════
 // LIST (tab)
 // ══════════════════════════════════════════
+let listSubTab = 'words';
+
+function buildListDayFilter(){
+  const sel = document.getElementById('list-day-filter');
+  if(!sel) return;
+  sel.innerHTML = '<option value="0">All days</option>';
+  for(let d=1;d<=DAYS;d++){
+    const o = document.createElement('option');
+    o.value = d;
+    o.textContent = `Day ${d} (words ${(d-1)*25+1}–${Math.min(d*25,ALL_WORDS.length)})`;
+    sel.appendChild(o);
+  }
+}
+
+function setListSubTab(tab){
+  listSubTab = tab;
+  document.getElementById('list-words-view').style.display = tab==='words' ? 'block' : 'none';
+  document.getElementById('list-sents-view').style.display = tab==='sents' ? 'block' : 'none';
+  document.getElementById('list-tab-words').style.background = tab==='words' ? 'var(--ink)' : 'transparent';
+  document.getElementById('list-tab-words').style.color = tab==='words' ? 'var(--paper)' : 'var(--muted)';
+  document.getElementById('list-tab-sents').style.background = tab==='sents' ? 'var(--ink)' : 'transparent';
+  document.getElementById('list-tab-sents').style.color = tab==='sents' ? 'var(--paper)' : 'var(--muted)';
+  if(tab==='sents') renderSentsList();
+  else doSearch2();
+}
+
 function doSearch2(){
-  const q=document.getElementById('search2').value.trim().toLowerCase();
-  const cat=document.getElementById('cat-filter2').value;
-  const filtered=ALL_WORDS.filter(w=>{
-    const mc=cat==='all'||w.cat===cat;
-    const mq=!q||w.ch.includes(q)||w.py.toLowerCase().includes(q)||w.en.toLowerCase().includes(q);
-    return mc&&mq;
+  const q = document.getElementById('search2').value.trim().toLowerCase();
+  const cat = document.getElementById('cat-filter2').value;
+  const dayF = parseInt(document.getElementById('list-day-filter').value||0);
+
+  let filtered = ALL_WORDS.filter(w=>{
+    const mc = cat==='all' || w.cat===cat;
+    const mq = !q || w.ch.includes(q) || w.py.toLowerCase().includes(q) || w.en.toLowerCase().includes(q);
+    let md = true;
+    if(dayF>0){
+      const idx = ALL_WORDS.indexOf(w);
+      md = idx >= (dayF-1)*25 && idx < dayF*25;
+    }
+    return mc && mq && md;
   });
-  const grid=document.getElementById('list-grid2');
-  const nr=document.getElementById('no-results2');
-  grid.innerHTML='';
-  if(!filtered.length){nr.style.display='block';return;}
-  nr.style.display='none';
+
+  const grid = document.getElementById('list-grid2');
+  const nr = document.getElementById('no-results2');
+  grid.innerHTML = '';
+  if(!filtered.length){ nr.style.display='block'; return; }
+  nr.style.display = 'none';
   filtered.forEach(w=>{
-    const el=document.createElement('div');
-    el.className='list-item'+(known[w.ch+w.en]?' known-item':'');
-    el.innerHTML=`<span class="li-ch">${w.ch}</span><span class="li-py">${w.py}</span><span class="li-en">${w.en}</span>`;
+    const el = document.createElement('div');
+    el.className = 'list-item' + (known[w.ch+w.en] ? ' known-item' : '');
+    el.innerHTML = `<span class="li-ch">${w.ch}</span><span class="li-py">${w.py}</span><span class="li-en">${w.en}</span>`;
+    el.onclick = ()=>{
+      const idx = deck.indexOf(w);
+      if(idx>=0){ cardIdx=idx; } else { deck=[...ALL_WORDS]; cardIdx=ALL_WORDS.indexOf(w); }
+      setTab('cards'); setCardSubMode('card');
+    };
     grid.appendChild(el);
   });
+
+  // Also update sentences if that tab is active
+  if(listSubTab==='sents') renderSentsList();
 }
+
+function renderSentsList(){
+  const dayF = parseInt(document.getElementById('list-day-filter').value||0);
+  const grid = document.getElementById('list-sents-grid');
+  const empty = document.getElementById('list-sents-empty');
+  grid.innerHTML = '';
+
+  // Collect sentences
+  let allSents = [];
+  const daysToShow = dayF>0 ? [dayF] : Array.from({length:24},(_,i)=>i+1);
+  daysToShow.forEach(d=>{
+    if(SENTENCES[d]) SENTENCES[d].forEach(s=> allSents.push({...s, day:d}));
+  });
+
+  if(!allSents.length){ empty.style.display='block'; return; }
+  empty.style.display = 'none';
+
+  allSents.forEach(s=>{
+    const card = document.createElement('div');
+    card.style.cssText = 'border:1.5px solid var(--border);border-radius:8px;padding:12px 14px;background:var(--paper);margin-bottom:8px;';
+    // Show full sentence with answer filled in green
+    const full = s.sent.replace('＿', `<span style="color:var(--green);font-weight:bold;border-bottom:2px solid var(--green)">${s.answer}</span>`);
+    card.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+        <div>
+          <div style="font-family:'Noto Serif SC',serif;font-size:clamp(15px,4vw,20px);color:var(--ink);line-height:1.8;letter-spacing:1px;margin-bottom:4px;">${full}</div>
+          <div style="font-size:9px;color:var(--muted);font-style:italic;">🌍 ${s.translation}</div>
+          <div style="font-size:9px;color:var(--muted);margin-top:3px;">Answer: <strong style="color:var(--green)">${s.answer}</strong> &nbsp;|&nbsp; Options: ${s.opts.join(' / ')}</div>
+        </div>
+        <span style="font-size:8px;padding:2px 7px;border-radius:10px;background:var(--soft);color:var(--muted);border:1px solid var(--border);white-space:nowrap;">Day ${s.day}</span>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
 function renderList2(){ doSearch2(); }
+
+// ── start sentence exercise from day modal ──
+function startDaySentence(){
+  const d = parseInt(document.getElementById('day-modal').dataset.day);
+  closeDayModal();
+  // Switch to exercises tab, open sentence exercise set to that day
+  setTab('exercises');
+  // Show the sentence exercise area directly
+  document.getElementById('ex-home').style.display='none';
+  document.getElementById('sent-result').style.display='none';
+  document.getElementById('sent-area').style.display='block';
+  buildSentDaySelect();
+  document.getElementById('sent-day-sel').value = d;
+  loadSentenceDay();
+  sentIdx=0; sentScore=0; sentMissed=[]; sentLocked=false;
+  renderSentQuestion();
+}
 
 // ══════════════════════════════════════════
 // INIT
@@ -2652,6 +2796,7 @@ function renderList2(){ doSearch2(); }
 buildDaySelect();
 buildExDaySelect();
 buildSentDaySelect();
+buildListDayFilter();
 applyFilter();
 updateDayBadge();
 </script>
